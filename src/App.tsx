@@ -48,6 +48,22 @@ type ButtonProps = {
   style?: CSSProperties;
 };
 
+type DecisionTensionData = {
+  title: string;
+  leftLabel: string;
+  leftSummary: string;
+  leftForces: readonly string[];
+  rightLabel: string;
+  rightSummary: string;
+  rightForces: readonly string[];
+  currentBalance: string;
+  balanceDirection: "left" | "right" | "center";
+  whyItMatters: string;
+  actionHint: string;
+  evidenceEntryLabel: string;
+  evidence: readonly string[];
+};
+
 type TaskPanelState = "待执行" | "整理中" | "待审批" | "已提交";
 
 const C = {
@@ -157,9 +173,19 @@ const customer = {
       "售后响应承诺是否足以消除服务信任问题。",
     ],
     tension: {
-      drivers: ["第二次试驾后对辅助驾驶体验满意", "技术体验认可度高", "春节前交付意愿明确"],
-      blockers: ["配偶偏好传统品牌", "价格较竞品高 2–3 万", "售后覆盖与服务信任尚未充分建立"],
-      core: "技术体验已通过，但家庭共识与品牌信任尚未通过。",
+      title: "智能体验诉求 vs 家庭品牌与价格顾虑",
+      leftLabel: "想要更强智能体验",
+      leftSummary: "刘浩已认可辅助驾驶与技术体验，希望保留高感知差异点。",
+      leftForces: ["第二次试驾后对辅助驾驶体验满意", "技术体验认可度高", "春节前交付意愿明确"],
+      rightLabel: "家庭品牌与价格顾虑",
+      rightSummary: "配偶品牌偏好更强，价格与服务信任一起拉住决策继续前进。",
+      rightForces: ["配偶偏好传统品牌", "价格较竞品高 2 至 3 万", "售后覆盖与服务信任尚未充分建立"],
+      currentBalance: "当前更受家庭品牌顾虑与价格敏感主导",
+      balanceDirection: "right",
+      whyItMatters: "如果继续主推高配体验而不先处理配偶品牌认知，成交阻力会继续上升。",
+      actionHint: "优先组织面向夫妻双方的家庭体验与品牌对比说明，不要先推进高配报价。",
+      evidenceEntryLabel: "Based on 3 signals",
+      evidence: ["第二次试驾后对辅助驾驶体验满意", "客户明确提到配偶尚未参与决策", "客户持续表达对价格区间的抵触"],
     },
     evidenceGaps: [
       {
@@ -292,8 +318,21 @@ const profileUpdatePacket = {
   status: "待确认",
   priorities: ["配偶认可度（新增，优先级高）", "品牌认知与功能体验的决策权重"],
   objections: ["配偶偏好传统品牌（新增）", "价格偏高（确认，持续）"],
-  tension: "家庭内部决策分歧：功能主导（刘浩）与品牌社会认知（配偶）",
-  evidence: ["「他老婆更想买奔驰」→ 配偶主动偏好", "「觉得不够档次」→ 品牌感知障碍", "「价格高了点」→ 价格阻力确认"],
+  tension: {
+    title: "功能体验偏好 vs 品牌认知与价格阻力",
+    leftLabel: "想保留功能体验优势",
+    leftSummary: "刘浩本人对智能系统有明显偏好，技术体验是当前最强吸引点。",
+    leftForces: ["挺喜欢这个车的智能系统", "个人偏好更偏向功能体验", "已具备进一步比较意愿"],
+    rightLabel: "品牌认知与价格阻力",
+    rightSummary: "配偶对品牌档次有明显顾虑，价格偏高进一步放大犹豫。",
+    rightForces: ["他老婆更想买奔驰", "觉得不够档次", "价格高了点"],
+    currentBalance: "当前仍由品牌认知顾虑主导，价格阻力次级跟随",
+    balanceDirection: "right",
+    whyItMatters: "如果销售继续只讲参数，无法处理真正的家庭决策阻力，下一步推进会卡住。",
+    actionHint: "先准备品牌对比与家庭场景体验，再决定是否进入报价或金融方案沟通。",
+    evidenceEntryLabel: "Based on 3 signals",
+    evidence: ["「他老婆更想买奔驰」→ 配偶主动偏好", "「觉得不够档次」→ 品牌感知障碍", "「价格高了点」→ 价格阻力确认"],
+  },
 } as const;
 
 const myWorkbench = {
@@ -579,6 +618,167 @@ function AgentBlock({ text, label = "助手草稿" }: { text: string; label?: st
         {label}
       </div>
       <div style={{ fontSize: 13, color: "#4C1D95", lineHeight: 1.7, fontStyle: "italic" }}>{text}</div>
+    </div>
+  );
+}
+
+function DecisionTensionCard({
+  data,
+  showManualControls = false,
+  compact = false,
+}: {
+  data: DecisionTensionData;
+  showManualControls?: boolean;
+  compact?: boolean;
+}) {
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
+  const [actionOpen, setActionOpen] = useState(false);
+  const [manualFlag, setManualFlag] = useState<"changed" | "incorrect" | null>(null);
+
+  const balanceOffset = { left: "18%", center: "50%", right: "82%" }[data.balanceDirection];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: compact ? 12 : 14 }}>
+      <div
+        className="decision-tension-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr auto 1fr",
+          gap: 12,
+          alignItems: "stretch",
+        }}
+      >
+        <div style={{ border: `1px solid ${C.greenBorder}`, borderRadius: 12, background: C.greenLight, padding: compact ? "12px 14px" : "14px 16px" }}>
+          <div style={{ fontSize: 10.5, fontWeight: 700, color: C.green, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Left Force</div>
+          <div style={{ fontSize: compact ? 15 : 16, fontWeight: 700, color: C.text0, lineHeight: 1.4, marginBottom: 6 }}>{data.leftLabel}</div>
+          <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7, marginBottom: 10 }}>{data.leftSummary}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            {data.leftForces.map((item) => (
+              <div key={item} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                <span style={{ color: C.green, fontWeight: 700, lineHeight: 1.4 }}>+</span>
+                <span style={{ fontSize: 12.5, color: C.text0, lineHeight: 1.65 }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: compact ? 42 : 54 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: C.text2, letterSpacing: 1.2 }}>VS</div>
+        </div>
+
+        <div style={{ border: `1px solid ${C.redBorder}`, borderRadius: 12, background: C.redLight, padding: compact ? "12px 14px" : "14px 16px" }}>
+          <div style={{ fontSize: 10.5, fontWeight: 700, color: C.red, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Right Force</div>
+          <div style={{ fontSize: compact ? 15 : 16, fontWeight: 700, color: C.text0, lineHeight: 1.4, marginBottom: 6 }}>{data.rightLabel}</div>
+          <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7, marginBottom: 10 }}>{data.rightSummary}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            {data.rightForces.map((item) => (
+              <div key={item} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                <span style={{ color: C.red, fontWeight: 700, lineHeight: 1.4 }}>-</span>
+                <span style={{ fontSize: 12.5, color: C.text0, lineHeight: 1.65 }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ border: `1px solid ${C.amberBorder}`, borderRadius: 12, background: "#FFFDF7", padding: compact ? "12px 14px" : "14px 16px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", marginBottom: 10, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>Tension Title</div>
+            <div style={{ fontSize: compact ? 15 : 16, fontWeight: 700, color: C.text0 }}>{data.title}</div>
+          </div>
+          <Tag label={data.evidenceEntryLabel} variant="amber" small />
+        </div>
+
+        <div style={{ position: "relative", height: 38, marginBottom: 10 }}>
+          <div style={{ position: "absolute", top: 18, left: 0, right: 0, height: 2, background: C.border, borderRadius: 999 }} />
+          <div style={{ position: "absolute", top: 10, left: "50%", width: 1, height: 18, background: C.borderMd }} />
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: balanceOffset,
+              transform: "translateX(-50%)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <div style={{ width: 14, height: 14, borderRadius: 999, background: C.amber, boxShadow: `0 0 0 4px ${C.amberLight}` }} />
+            <div style={{ fontSize: 11, color: "#92400E", fontWeight: 600 }}>当前偏向</div>
+          </div>
+        </div>
+
+        <div style={{ fontSize: 13, color: "#92400E", lineHeight: 1.7, marginBottom: 12 }}>{data.currentBalance}</div>
+
+        <button
+          onClick={() => setActionOpen((prev) => !prev)}
+          style={{
+            width: "100%",
+            textAlign: "left",
+            background: C.surface,
+            border: `1px solid ${C.border}`,
+            borderRadius: 10,
+            padding: "10px 12px",
+            cursor: "pointer",
+            marginBottom: evidenceOpen || showManualControls || actionOpen ? 10 : 0,
+          }}
+        >
+          <div style={{ fontSize: 11, color: C.text2, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Why it matters</div>
+          <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.7 }}>{data.whyItMatters}</div>
+        </button>
+
+        {actionOpen && (
+          <div style={{ background: C.blueLight, border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: "10px 12px", marginBottom: 10 }}>
+            <div style={{ fontSize: 11, color: C.blue, fontWeight: 700, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Action Hint</div>
+            <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.7 }}>{data.actionHint}</div>
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <SecondaryBtn onClick={() => setEvidenceOpen((prev) => !prev)} style={{ padding: "7px 12px", fontSize: 12 }}>
+            {evidenceOpen ? "收起证据来源" : "查看证据来源"}
+          </SecondaryBtn>
+          {showManualControls && (
+            <>
+              <SecondaryBtn onClick={() => setManualFlag("changed")} style={{ padding: "7px 12px", fontSize: 12 }}>
+                标记张力已变化
+              </SecondaryBtn>
+              <DangerBtn onClick={() => setManualFlag("incorrect")} style={{ padding: "7px 12px", fontSize: 12 }}>
+                标记系统判断有误
+              </DangerBtn>
+            </>
+          )}
+        </div>
+
+        {manualFlag && (
+          <div
+            style={{
+              marginTop: 10,
+              background: manualFlag === "incorrect" ? C.redLight : C.blueLight,
+              border: `1px solid ${manualFlag === "incorrect" ? C.redBorder : C.blueBorder}`,
+              borderRadius: 10,
+              padding: "10px 12px",
+              fontSize: 12.5,
+              color: manualFlag === "incorrect" ? C.red : C.blue,
+            }}
+          >
+            {manualFlag === "changed" ? "已标记：当前张力已变化，建议重新评估下一步动作。" : "已标记：系统判断可能有误，需人工复核证据与状态更新。"}
+          </div>
+        )}
+
+        {evidenceOpen && (
+          <div style={{ marginTop: 10, borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
+            <div style={{ fontSize: 11, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Evidence Entry</div>
+            {data.evidence.map((item, index) => (
+              <div key={item} title={item} style={{ padding: "8px 0", borderBottom: index === data.evidence.length - 1 ? "none" : `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1422,7 +1622,7 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
               </div>
             </CardPad>
           </Card>
-          <div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <Card>
               <CardPad style={{ paddingBottom: 4 }}>
                 <SectionTitle>判断相关特征</SectionTitle>
@@ -1478,38 +1678,7 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
             <Card style={{ borderColor: C.amberBorder }}>
               <CardPad>
                 <SectionTitle>决策张力结构</SectionTitle>
-                <div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                  <div style={{ border: `1px solid ${C.greenBorder}`, borderRadius: 10, overflow: "hidden" }}>
-                    <div style={{ padding: "10px 12px", background: C.greenLight, borderBottom: `1px solid ${C.greenBorder}`, fontSize: 12, fontWeight: 700, color: C.green }}>
-                      推进因素
-                    </div>
-                    <div style={{ padding: "0 12px" }}>
-                      {stateDetail.tension.drivers.map((item, index) => (
-                        <Row key={item} last={index === stateDetail.tension.drivers.length - 1}>
-                          <span style={{ color: C.green, fontWeight: 700 }}>+</span>
-                          <span style={{ fontSize: 13, color: C.text0, lineHeight: 1.7 }}>{item}</span>
-                        </Row>
-                      ))}
-                    </div>
-                  </div>
-                  <div style={{ border: `1px solid ${C.redBorder}`, borderRadius: 10, overflow: "hidden" }}>
-                    <div style={{ padding: "10px 12px", background: C.redLight, borderBottom: `1px solid ${C.redBorder}`, fontSize: 12, fontWeight: 700, color: C.red }}>
-                      阻滞因素
-                    </div>
-                    <div style={{ padding: "0 12px" }}>
-                      {stateDetail.tension.blockers.map((item, index) => (
-                        <Row key={item} last={index === stateDetail.tension.blockers.length - 1}>
-                          <span style={{ color: C.red, fontWeight: 700 }}>-</span>
-                          <span style={{ fontSize: 13, color: C.text0, lineHeight: 1.7 }}>{item}</span>
-                        </Row>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div style={{ marginTop: 14, background: C.amberLight, borderLeft: `3px solid ${C.amber}`, borderRadius: 8, padding: "10px 14px" }}>
-                  <div style={{ fontSize: 11, color: C.text2, marginBottom: 6 }}>当前核心张力</div>
-                  <div style={{ fontSize: 13, color: "#92400E", lineHeight: 1.7 }}>{stateDetail.tension.core}</div>
-                </div>
+                <DecisionTensionCard data={stateDetail.tension} showManualControls />
               </CardPad>
             </Card>
 
@@ -1760,8 +1929,21 @@ function SalesPage() {
   const candidates = {
     priorities: ["配偶认可度（新增，优先级高）", "品牌认知与功能体验的决策权重"],
     objections: ["配偶偏好传统品牌（新增）", "价格偏高（确认，持续）"],
-    tension: "家庭内部决策分歧：功能主导（刘浩）与品牌社会认知（配偶）",
-    evidence: ["「他老婆更想买奔驰」→ 配偶主动偏好", "「觉得不够档次」→ 品牌感知障碍", "「价格高了点」→ 价格阻力确认"],
+    tension: {
+      title: "功能体验偏好 vs 品牌认知与价格阻力",
+      leftLabel: "功能体验偏好",
+      leftSummary: "客户本人已表现出对智能系统的明确兴趣，技术体验仍是可推进点。",
+      leftForces: ["挺喜欢智能系统", "客户本人保持正向体验反馈", "功能优势仍有说服空间"],
+      rightLabel: "品牌认知与价格阻力",
+      rightSummary: "配偶偏好传统品牌，同时价格偏高让家庭决策更保守。",
+      rightForces: ["老婆更想买奔驰", "觉得不够档次", "价格高了点"],
+      currentBalance: "当前仍受品牌认知阻力主导，价格敏感同步压制推进",
+      balanceDirection: "right",
+      whyItMatters: "这说明下一步不能继续只讲参数，而要优先处理家庭层面的品牌顾虑。",
+      actionHint: "先补品牌对比材料和家庭体验场景，再判断是否适合进入报价推进。",
+      evidenceEntryLabel: "Based on 3 signals",
+      evidence: ["「他老婆更想买奔驰」→ 配偶主动偏好", "「觉得不够档次」→ 品牌感知障碍", "「价格高了点」→ 价格阻力确认"],
+    },
   } as const;
 
   return (
@@ -1848,20 +2030,9 @@ function SalesPage() {
                 </div>
               ))}
 
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 7, textTransform: "uppercase", letterSpacing: 0.5 }}>决策张力：更新</div>
-                <div style={{ background: C.amberLight, border: `1px solid ${C.amberBorder}`, borderLeft: `3px solid ${C.amber}`, borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "#92400E" }}>
-                  {candidates.tension}
-                </div>
-              </div>
-
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 7, textTransform: "uppercase", letterSpacing: 0.5 }}>证据引用</div>
-                {candidates.evidence.map((item) => (
-                  <div key={item} style={{ fontSize: 12.5, color: C.text1, padding: "5px 0", borderBottom: `1px solid ${C.border}` }}>
-                    {item}
-                  </div>
-                ))}
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 7, textTransform: "uppercase", letterSpacing: 0.5 }}>决策张力：更新</div>
+                <DecisionTensionCard data={candidates.tension} compact />
               </div>
 
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -2182,6 +2353,7 @@ export default function App() {
           .work-item-row,
           .approval-item-row,
           .top-dual,
+          .decision-tension-grid,
           .detail-cards-grid,
           .two-col,
           .split-grid,
@@ -2377,17 +2549,7 @@ export default function App() {
                     </div>
                     <div style={{ marginBottom: 12 }}>
                       <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 7, textTransform: "uppercase", letterSpacing: 0.5 }}>决策张力：更新</div>
-                      <div style={{ background: C.amberLight, border: `1px solid ${C.amberBorder}`, borderLeft: `3px solid ${C.amber}`, borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "#92400E" }}>
-                        {profileUpdatePacket.tension}
-                      </div>
-                    </div>
-                    <div style={{ marginBottom: 14 }}>
-                      <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 7, textTransform: "uppercase", letterSpacing: 0.5 }}>证据引用</div>
-                      {profileUpdatePacket.evidence.map((item) => (
-                        <div key={item} style={{ fontSize: 12.5, color: C.text1, padding: "5px 0", borderBottom: `1px solid ${C.border}` }}>
-                          {item}
-                        </div>
-                      ))}
+                      <DecisionTensionCard data={profileUpdatePacket.tension} compact />
                     </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       <PrimaryBtn onClick={() => setGlobalTaskState("已提交")}>确认状态更新</PrimaryBtn>
