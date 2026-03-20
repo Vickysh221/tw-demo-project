@@ -472,8 +472,9 @@ function Header({ page }: HeaderProps) {
 }
 
 function WorkspacePage() {
-  const [stream, setStream] = useState<"events" | "versions">("events");
+  const [workTab, setWorkTab] = useState<"history" | "ownerTasks">("history");
   const [note, setNote] = useState("");
+  const ownerEvents = customer.events.filter((event) => event.owner === customer.currentOwner);
 
   return (
     <div>
@@ -658,30 +659,69 @@ function WorkspacePage() {
                 ))}
               </div>
               <div style={{ fontSize: 12, color: C.text2 }}>审批人：{customer.stateVersions[0].approvedBy}</div>
+              <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  状态版本流 / 治理追溯
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {customer.stateVersions.map((version) => (
+                    <div
+                      key={version.version}
+                      style={{
+                        border: `1px solid ${version.level === "重要更新" ? C.amberBorder : C.border}`,
+                        borderLeft: `3px solid ${version.level === "重要更新" ? C.amber : C.borderMd}`,
+                        borderRadius: 8,
+                        padding: "12px 14px",
+                        background: C.surfaceAlt,
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 8, flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text0 }}>{version.version}</span>
+                          <Tag label={version.level} variant={version.level === "重要更新" ? "amber" : "neutral"} small />
+                        </div>
+                        <span style={{ fontSize: 11.5, color: C.text3 }}>{version.date}</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: C.text2, marginBottom: 8 }}>触发原因：{version.trigger}</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
+                        {version.changed.map((field) => (
+                          <Tag key={field} label={field} variant="purple" small />
+                        ))}
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: C.text2, marginBottom: version.note ? 8 : 0, gap: 8, flexWrap: "wrap" }}>
+                        <span>
+                          审批人：<strong style={{ color: C.text1 }}>{version.approvedBy}</strong>
+                        </span>
+                        <span>参与助手：{version.agents.join("、")}</span>
+                      </div>
+                      {version.note && <div style={{ background: C.surface, borderRadius: 6, padding: "8px 12px", fontSize: 12, color: C.text1 }}>{version.note}</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </CardPad>
           </Card>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase" }}>工作区</div>
-
           <div style={{ display: "flex", background: C.surfaceAlt, borderRadius: 10, padding: 4, border: `1px solid ${C.border}` }}>
             {[
-              { id: "events", label: "事件流" },
-              { id: "versions", label: "状态版本流 / 治理追溯" },
+              { id: "history", label: "客户触达任务历史" },
+              { id: "ownerTasks", label: "我负责的任务" },
             ].map((item) => (
               <button
                 key={item.id}
-                onClick={() => setStream(item.id as "events" | "versions")}
+                onClick={() => setWorkTab(item.id as "history" | "ownerTasks")}
                 style={{
                   flex: 1,
                   padding: "8px 0",
                   borderRadius: 8,
-                  background: stream === item.id ? C.surface : "none",
-                  border: stream === item.id ? `1px solid ${C.border}` : "1px solid transparent",
-                  color: stream === item.id ? C.text0 : C.text2,
+                  background: workTab === item.id ? C.surface : "none",
+                  border: workTab === item.id ? `1px solid ${C.border}` : "1px solid transparent",
+                  color: workTab === item.id ? C.text0 : C.text2,
                   fontSize: 12.5,
-                  fontWeight: stream === item.id ? 600 : 400,
+                  fontWeight: workTab === item.id ? 600 : 400,
                   cursor: "pointer",
                   transition: "all 0.15s",
                 }}
@@ -690,60 +730,79 @@ function WorkspacePage() {
               </button>
             ))}
           </div>
+          {workTab === "history" && (
+            <Card>
+              <CardPad style={{ paddingBottom: 8 }}>
+                <SectionTitle>客户触达任务历史</SectionTitle>
+                {customer.events.map((event) => {
+                  const typeColor = { SALES_VISIT: C.blue, STATE_UPDATE: "#6D28D9", CS_OUTREACH: C.green }[event.type];
+                  const typeBg = { SALES_VISIT: C.blueLight, STATE_UPDATE: "#F5F3FF", CS_OUTREACH: C.greenLight }[event.type];
 
-          {stream === "events" &&
-            customer.events.map((event) => {
-              const typeColor = { SALES_VISIT: C.blue, STATE_UPDATE: "#6D28D9", CS_OUTREACH: C.green }[event.type];
-              const typeBg = { SALES_VISIT: C.blueLight, STATE_UPDATE: "#F5F3FF", CS_OUTREACH: C.greenLight }[event.type];
-
-              return (
-                <Card key={event.id} style={{ borderLeft: `3px solid ${typeColor}` }}>
-                  <CardPad>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        <span style={{ background: typeBg, color: typeColor, fontSize: 11, fontWeight: 600, padding: "2px 9px", borderRadius: 5 }}>
-                          {event.typeLabel}
-                        </span>
-                        <span style={{ fontSize: 11.5, color: C.text2 }}>{event.id}</span>
-                      </div>
-                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        <span style={{ fontSize: 12, color: C.text2 }}>{event.owner}</span>
-                        <span style={{ fontSize: 11.5, color: C.text3 }}>{event.date}</span>
-                      </div>
+                  return (
+                    <div key={event.id} style={{ marginBottom: 12 }}>
+                      <Card style={{ borderLeft: `3px solid ${typeColor}` }}>
+                        <CardPad>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                              <span style={{ background: typeBg, color: typeColor, fontSize: 11, fontWeight: 600, padding: "2px 9px", borderRadius: 5 }}>
+                                {event.typeLabel}
+                              </span>
+                              <span style={{ fontSize: 11.5, color: C.text2 }}>{event.id}</span>
+                            </div>
+                            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                              <span style={{ fontSize: 12, color: C.text2 }}>{event.owner}</span>
+                              <span style={{ fontSize: 11.5, color: C.text3 }}>{event.date}</span>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{event.summary}</div>
+                        </CardPad>
+                      </Card>
                     </div>
-                    <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{event.summary}</div>
-                  </CardPad>
-                </Card>
-              );
-            })}
+                  );
+                })}
+              </CardPad>
+            </Card>
+          )}
+          {workTab === "ownerTasks" && (
+            <Card>
+              <CardPad style={{ paddingBottom: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 8, flexWrap: "wrap" }}>
+                  <SectionTitle>我负责的任务</SectionTitle>
+                  <Tag label={`当前责任人：${customer.currentOwner}`} variant="blue" small />
+                </div>
+                {ownerEvents.length > 0 ? (
+                  ownerEvents.map((event) => {
+                    const typeColor = { SALES_VISIT: C.blue, STATE_UPDATE: "#6D28D9", CS_OUTREACH: C.green }[event.type];
+                    const typeBg = { SALES_VISIT: C.blueLight, STATE_UPDATE: "#F5F3FF", CS_OUTREACH: C.greenLight }[event.type];
 
-          {stream === "versions" &&
-            customer.stateVersions.map((version) => (
-              <Card key={version.version} style={{ borderLeft: `3px solid ${version.level === "重要更新" ? C.amber : C.border}` }}>
-                <CardPad>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text0 }}>{version.version}</span>
-                      <Tag label={version.level} variant={version.level === "重要更新" ? "amber" : "neutral"} small />
-                    </div>
-                    <span style={{ fontSize: 11.5, color: C.text3 }}>{version.date}</span>
+                    return (
+                      <div key={event.id} style={{ marginBottom: 12 }}>
+                        <Card style={{ borderLeft: `3px solid ${typeColor}` }}>
+                          <CardPad>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                <span style={{ background: typeBg, color: typeColor, fontSize: 11, fontWeight: 600, padding: "2px 9px", borderRadius: 5 }}>
+                                  {event.typeLabel}
+                                </span>
+                                <span style={{ fontSize: 11.5, color: C.text2 }}>{event.id}</span>
+                              </div>
+                              <span style={{ fontSize: 11.5, color: C.text3 }}>{event.date}</span>
+                            </div>
+                            <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.65, marginBottom: 8 }}>{event.summary}</div>
+                            <div style={{ fontSize: 12, color: C.text2 }}>责任人：{event.owner}</div>
+                          </CardPad>
+                        </Card>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: "14px 16px", fontSize: 13, color: C.text2 }}>
+                    当前责任人暂无客户触达记录。
                   </div>
-                  <div style={{ fontSize: 12, color: C.text2, marginBottom: 8 }}>触发原因：{version.trigger}</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
-                    {version.changed.map((field) => (
-                      <Tag key={field} label={field} variant="purple" small />
-                    ))}
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: C.text2, marginBottom: 8 }}>
-                    <span>
-                      审批人：<strong style={{ color: C.text1 }}>{version.approvedBy}</strong>
-                    </span>
-                    <span>参与助手：{version.agents.join("、")}</span>
-                  </div>
-                  {version.note && <div style={{ background: C.surfaceAlt, borderRadius: 6, padding: "8px 12px", fontSize: 12, color: C.text1 }}>{version.note}</div>}
-                </CardPad>
-              </Card>
-            ))}
+                )}
+              </CardPad>
+            </Card>
+          )}
         </div>
       </div>
     </div>
