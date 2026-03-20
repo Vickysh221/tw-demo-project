@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
-type PageId = "workspace" | "sales" | "cs";
+type PageId = "myWorkbench" | "workspace" | "sales" | "cs";
 type PillVariant = "green" | "blue" | "amber" | "red" | "neutral";
 type TagVariant = PillVariant | "purple";
 
@@ -255,6 +255,125 @@ const profileUpdatePacket = {
   evidence: ["「他老婆更想买奔驰」→ 配偶主动偏好", "「觉得不够档次」→ 品牌感知障碍", "「价格高了点」→ 价格阻力确认"],
 } as const;
 
+const myWorkbench = {
+  summary: {
+    todoCount: 4,
+    inProgressCount: 2,
+    pendingApprovalCount: 3,
+    newAssignedCount: 1,
+    highRiskCount: 2,
+  },
+  tasks: {
+    pending: [
+      {
+        customerName: "刘浩",
+        stage: "深度意向期",
+        taskTitle: "家庭体验邀约方案确认",
+        status: "待执行",
+        risk: "中风险",
+        dueTime: "今天 18:00",
+        ownerReason: "客户进入双人决策阶段，当前 owner 为你，需要你确认邀约节奏。",
+      },
+      {
+        customerName: "王洁",
+        stage: "方案评估期",
+        taskTitle: "预算顾虑升级后的跟进策略确定",
+        status: "待执行",
+        risk: "高风险",
+        dueTime: "今天 17:30",
+        ownerReason: "风险等级上调后由系统路由给当前业务 owner 优先处理。",
+      },
+    ],
+    inProgress: [
+      {
+        customerName: "陈晨",
+        stage: "对比评估期",
+        taskTitle: "补充技术疑问回访记录",
+        status: "执行中",
+        risk: "低风险",
+        dueTime: "今天 20:00",
+        ownerReason: "客户状态版本刚更新，需要你补齐一线记录后继续推进。",
+      },
+      {
+        customerName: "林楠",
+        stage: "成交推进期",
+        taskTitle: "金融方案二次确认与交付窗口锁定",
+        status: "执行中",
+        risk: "中风险",
+        dueTime: "明天 11:00",
+        ownerReason: "你是当前成交 owner，且交付窗口进入锁定期。",
+      },
+    ],
+    submitted: [
+      {
+        customerName: "周宁",
+        stage: "意向确认期",
+        taskTitle: "门店体验反馈已提交待状态更新",
+        status: "已提交待更新",
+        risk: "低风险",
+        dueTime: "等待系统回写",
+        ownerReason: "你提交的执行材料正在等待状态整理与版本回写。",
+      },
+    ],
+    completed: [
+      {
+        customerName: "何静",
+        stage: "已完成签约",
+        taskTitle: "交车前最终确认",
+        status: "已完成",
+        risk: "低风险",
+        dueTime: "今天 09:20 已完成",
+        ownerReason: "该客户上一轮已由你完成关键动作，本事项已闭环。",
+      },
+    ],
+  },
+  approvals: [
+    {
+      customerName: "刘浩",
+      source: "销售 Agent",
+      type: "待审批分析结果",
+      status: "待审批",
+      submittedAt: "今天 10:20",
+    },
+    {
+      customerName: "陈晨",
+      source: "Customer Agent",
+      type: "待确认状态更新",
+      status: "待确认",
+      submittedAt: "今天 14:10",
+    },
+    {
+      customerName: "王洁",
+      source: "CS Agent",
+      type: "待确认动作建议",
+      status: "待 review / override",
+      submittedAt: "今天 15:35",
+    },
+  ],
+  alerts: [
+    {
+      customerName: "王洁",
+      type: "风险升高",
+      message: "预算顾虑上升，建议今日跟进，避免进入竞品比较拉锯。",
+    },
+    {
+      customerName: "陈晨",
+      type: "owner 切换",
+      message: "状态版本更新后已切换到你，当前需补齐回访记录并确认下一步动作。",
+    },
+    {
+      customerName: "林楠",
+      type: "新客户分配给我",
+      message: "成交窗口压缩到 48 小时内，系统按成交优先级分配给你处理。",
+    },
+    {
+      customerName: "刘浩",
+      type: "状态版本更新",
+      message: "配偶参与决策已进入主状态版本，需要你确认邀约方案与审批结果。",
+    },
+  ],
+} as const;
+
 function StatusPill({ label, variant }: StatusPillProps) {
   const styles: Record<PillVariant, { color: string; bg: string; border: string }> = {
     green: { color: C.green, bg: C.greenLight, border: C.greenBorder },
@@ -486,15 +605,289 @@ function DangerBtn({ children, onClick, style = {} }: ButtonProps) {
   );
 }
 
+function getTaskStatusVariant(status: string): PillVariant {
+  if (status.includes("执行中")) return "blue";
+  if (status.includes("待审批") || status.includes("待更新")) return "amber";
+  if (status.includes("完成")) return "green";
+  return "neutral";
+}
+
+function getRiskVariant(risk: string): TagVariant {
+  if (risk.includes("高")) return "red";
+  if (risk.includes("中")) return "amber";
+  if (risk.includes("低")) return "green";
+  return "neutral";
+}
+
+function getAlertVariant(type: string): TagVariant {
+  if (type.includes("风险")) return "red";
+  if (type.includes("owner")) return "blue";
+  if (type.includes("分配")) return "amber";
+  return "neutral";
+}
+
+function SummaryStat({ label, value, variant }: { label: string; value: number; variant: TagVariant }) {
+  return (
+    <div style={{ padding: "14px 16px", borderRight: `1px solid ${C.border}`, minWidth: 0 }}>
+      <div style={{ fontSize: 12, color: C.text2, marginBottom: 8 }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+        <span style={{ fontSize: 30, fontWeight: 700, color: C.text0, lineHeight: 1 }}>{value}</span>
+        <Tag label={label} variant={variant} small />
+      </div>
+    </div>
+  );
+}
+
+function WorkItemRow({
+  item,
+  last = false,
+  onOpenWorkspace,
+}: {
+  item: {
+    customerName: string;
+    stage: string;
+    taskTitle: string;
+    status: string;
+    risk: string;
+    dueTime: string;
+    ownerReason: string;
+  };
+  last?: boolean;
+  onOpenWorkspace: () => void;
+}) {
+  return (
+    <div
+      className="work-item-row"
+      style={{
+        padding: "16px 0",
+        borderBottom: last ? "none" : `1px solid ${C.border}`,
+        display: "grid",
+        gridTemplateColumns: "1.4fr 1.8fr 0.9fr 0.9fr auto",
+        gap: 14,
+        alignItems: "center",
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: C.text0 }}>{item.customerName}</span>
+          <Tag label={item.stage} variant="neutral" small />
+        </div>
+        <div style={{ fontSize: 12.5, color: C.text2, lineHeight: 1.6 }}>{item.ownerReason}</div>
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 14, color: C.text0, fontWeight: 600, marginBottom: 4 }}>{item.taskTitle}</div>
+        <div style={{ fontSize: 12.5, color: C.text2 }}>当前阶段：{item.stage}</div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
+        <StatusPill label={item.status} variant={getTaskStatusVariant(item.status)} />
+        <Tag label={item.risk} variant={getRiskVariant(item.risk)} small />
+      </div>
+      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 11, color: C.text2, marginBottom: 4 }}>截止时间 / 时间窗口</div>
+        <div>{item.dueTime}</div>
+      </div>
+      <div style={{ justifySelf: "end" }}>
+        <SecondaryBtn onClick={onOpenWorkspace} style={{ whiteSpace: "nowrap" }}>
+          进入客户工作台
+        </SecondaryBtn>
+      </div>
+    </div>
+  );
+}
+
+function ApprovalItemRow({
+  item,
+  last = false,
+  onOpenWorkspace,
+}: {
+  item: (typeof myWorkbench.approvals)[number];
+  last?: boolean;
+  onOpenWorkspace: () => void;
+}) {
+  return (
+    <div
+      className="approval-item-row"
+      style={{
+        padding: "16px 0",
+        borderBottom: last ? "none" : `1px solid ${C.border}`,
+        display: "grid",
+        gridTemplateColumns: "1.1fr 1fr 1fr 0.8fr auto",
+        gap: 14,
+        alignItems: "center",
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: C.text0, marginBottom: 6 }}>{item.customerName}</div>
+        <div style={{ fontSize: 12.5, color: C.text2 }}>提交来源：{item.source}</div>
+      </div>
+      <div style={{ fontSize: 13, color: C.text0 }}>{item.type}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
+        <StatusPill label={item.status} variant={item.status.includes("审批") ? "amber" : "blue"} />
+        <span style={{ fontSize: 12, color: C.text2 }}>提交时间：{item.submittedAt}</span>
+      </div>
+      <div style={{ fontSize: 12.5, color: C.text1 }}>当前等待你处理</div>
+      <div style={{ display: "flex", gap: 8, justifySelf: "end", flexWrap: "wrap", justifyContent: "flex-end" }}>
+        <SecondaryBtn onClick={onOpenWorkspace} style={{ padding: "7px 12px" }}>
+          查看
+        </SecondaryBtn>
+        <PrimaryBtn style={{ padding: "8px 12px" }}>审批</PrimaryBtn>
+        <SecondaryBtn style={{ padding: "7px 12px" }}>修改后提交</SecondaryBtn>
+        <DangerBtn style={{ padding: "7px 12px" }}>驳回</DangerBtn>
+      </div>
+    </div>
+  );
+}
+
+function AlertItemRow({ item, last = false }: { item: (typeof myWorkbench.alerts)[number]; last?: boolean }) {
+  return (
+    <div
+      style={{
+        padding: "14px 0",
+        borderBottom: last ? "none" : `1px solid ${C.border}`,
+        display: "grid",
+        gridTemplateColumns: "1fr 4fr",
+        gap: 16,
+        alignItems: "start",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color: C.text0 }}>{item.customerName}</span>
+        <Tag label={item.type} variant={getAlertVariant(item.type)} small />
+      </div>
+      <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.75 }}>{item.message}</div>
+    </div>
+  );
+}
+
+function MyWorkbenchPage({ onOpenWorkspace }: { onOpenWorkspace: () => void }) {
+  type WorkbenchTaskItem = {
+    customerName: string;
+    stage: string;
+    taskTitle: string;
+    status: string;
+    risk: string;
+    dueTime: string;
+    ownerReason: string;
+  };
+
+  const taskGroups: Array<{
+    key: keyof typeof myWorkbench.tasks;
+    title: string;
+    count: number;
+    items: readonly WorkbenchTaskItem[];
+  }> = [
+    { key: "pending", title: "待执行", count: myWorkbench.tasks.pending.length, items: myWorkbench.tasks.pending },
+    { key: "inProgress", title: "执行中", count: myWorkbench.tasks.inProgress.length, items: myWorkbench.tasks.inProgress },
+    { key: "submitted", title: "已提交待更新", count: myWorkbench.tasks.submitted.length, items: myWorkbench.tasks.submitted },
+    { key: "completed", title: "已完成", count: myWorkbench.tasks.completed.length, items: myWorkbench.tasks.completed },
+  ];
+
+  return (
+    <div>
+      <Header page="myWorkbench" />
+      <div style={{ maxWidth: 1240, margin: "24px auto 40px", padding: "0 28px", display: "grid", gap: 22 }}>
+        <Card>
+          <CardPad style={{ paddingBottom: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 18 }}>
+              <div>
+                <SectionTitle>今日待处理总览</SectionTitle>
+                <div style={{ fontSize: 24, fontWeight: 700, color: C.text0, marginBottom: 6 }}>我的工作台</div>
+                <div style={{ fontSize: 13, color: C.text2, lineHeight: 1.7 }}>
+                  优先查看当前待执行事项、待审批输出，以及因路由变更需要你立即接手的客户。
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <Tag label="个人视角入口" variant="blue" small />
+                <Tag label="业务 owner 工作总览" variant="neutral" small />
+              </div>
+            </div>
+            <div className="workbench-summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
+              <SummaryStat label="待执行" value={myWorkbench.summary.todoCount} variant="neutral" />
+              <SummaryStat label="执行中" value={myWorkbench.summary.inProgressCount} variant="blue" />
+              <SummaryStat label="待审批" value={myWorkbench.summary.pendingApprovalCount} variant="amber" />
+              <SummaryStat label="新分配" value={myWorkbench.summary.newAssignedCount} variant="amber" />
+              <SummaryStat label="高风险" value={myWorkbench.summary.highRiskCount} variant="red" />
+            </div>
+          </CardPad>
+        </Card>
+
+        <Card>
+          <CardPad>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap", marginBottom: 10 }}>
+              <div>
+                <SectionTitle>我的任务</SectionTitle>
+                <div style={{ fontSize: 13, color: C.text2 }}>按执行状态分组，优先回答“我现在最该先处理什么”。</div>
+              </div>
+              <Tag label="以任务推进为主，不混入审批事项" variant="neutral" small />
+            </div>
+
+            <div style={{ display: "grid", gap: 18 }}>
+              {taskGroups.map((group) => (
+                <div key={group.key}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: C.text0 }}>{group.title}</div>
+                    <Tag label={`${group.count} 项`} variant={group.title === "执行中" ? "blue" : group.title === "已完成" ? "green" : "neutral"} small />
+                  </div>
+                  <div style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+                    {group.items.map((item, index) => (
+                      <WorkItemRow key={`${group.key}-${item.customerName}-${item.taskTitle}`} item={item} last={index === group.items.length - 1} onOpenWorkspace={onOpenWorkspace} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardPad>
+        </Card>
+
+        <div className="workbench-dual" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 22 }}>
+          <Card>
+            <CardPad>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
+                <div>
+                  <SectionTitle>待我审批</SectionTitle>
+                  <div style={{ fontSize: 13, color: C.text2 }}>审批流独立于任务流，用于处理 agent / system output 的人工确认。</div>
+                </div>
+                <Tag label={`${myWorkbench.approvals.length} 条待处理`} variant="amber" small />
+              </div>
+              <div style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+                {myWorkbench.approvals.map((item, index) => (
+                  <ApprovalItemRow key={`${item.customerName}-${item.type}`} item={item} last={index === myWorkbench.approvals.length - 1} onOpenWorkspace={onOpenWorkspace} />
+                ))}
+              </div>
+            </CardPad>
+          </Card>
+
+          <Card>
+            <CardPad>
+              <div style={{ marginBottom: 8 }}>
+                <SectionTitle>系统提醒 / 最新变化</SectionTitle>
+                <div style={{ fontSize: 13, color: C.text2, lineHeight: 1.7 }}>
+                  这里说明为什么这些客户、任务和审批会轮到你处理，以及你现在需要介入的原因。
+                </div>
+              </div>
+              <div style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+                {myWorkbench.alerts.map((item, index) => (
+                  <AlertItemRow key={`${item.customerName}-${item.type}`} item={item} last={index === myWorkbench.alerts.length - 1} />
+                ))}
+              </div>
+            </CardPad>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Header({ page }: HeaderProps) {
   const pageTitles: Record<PageId, string> = {
+    myWorkbench: "我的工作台",
     workspace: "客户状态工作台",
     sales: "销售轻记录",
     cs: "客服触达检查",
   };
   const summary = customer.summaryBlock;
 
-  if (page === "workspace") {
+  if (page === "workspace" || page === "myWorkbench") {
     return (
       <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: "14px 28px" }}>
         <div style={{ fontSize: 11.5, color: C.text2 }}>{pageTitles[page]}</div>
@@ -1665,7 +2058,7 @@ function CSPage() {
 }
 
 export default function App() {
-  const [page, setPage] = useState<PageId>("workspace");
+  const [page, setPage] = useState<PageId>("myWorkbench");
   const [globalTaskState, setGlobalTaskState] = useState<TaskPanelState>("待执行");
   const [messagePanelOpen, setMessagePanelOpen] = useState(false);
   const taskStateOptions: TaskPanelState[] = ["待执行", "整理中", "待审批", "已提交"];
@@ -1682,6 +2075,7 @@ export default function App() {
         ]
       : [];
   const nav: Array<{ id: PageId; label: string }> = [
+    { id: "myWorkbench", label: "我的工作台" },
     { id: "workspace", label: "客户状态工作台" },
     { id: "sales", label: "销售轻记录" },
     { id: "cs", label: "客服触达检查" },
@@ -1694,6 +2088,10 @@ export default function App() {
         textarea:focus { border-color: ${C.blue} !important; box-shadow: 0 0 0 3px ${C.blueLight}; outline: none; }
         button:hover { opacity: 0.88; }
         @media (max-width: 980px) {
+          .workbench-dual,
+          .workbench-summary-grid,
+          .work-item-row,
+          .approval-item-row,
           .top-dual,
           .detail-cards-grid,
           .two-col,
@@ -1816,6 +2214,7 @@ export default function App() {
             )}
           </button>
           <div
+            onClick={() => setPage("myWorkbench")}
             style={{
               width: 38,
               height: 38,
@@ -1827,7 +2226,9 @@ export default function App() {
               justifyContent: "center",
               fontSize: 14,
               fontWeight: 700,
+              cursor: "pointer",
             }}
+            title="进入我的工作台"
           >
             王
           </div>
@@ -1911,6 +2312,7 @@ export default function App() {
         </div>
       )}
 
+      {page === "myWorkbench" && <MyWorkbenchPage onOpenWorkspace={() => setPage("workspace")} />}
       {page === "workspace" && <WorkspacePage taskPanelState={globalTaskState} setTaskPanelState={setGlobalTaskState} onOpenMessages={() => setMessagePanelOpen(true)} />}
       {page === "sales" && <SalesPage />}
       {page === "cs" && <CSPage />}
