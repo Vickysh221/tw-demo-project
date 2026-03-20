@@ -42,6 +42,8 @@ type ButtonProps = {
   style?: CSSProperties;
 };
 
+type TaskPanelState = "待执行" | "执行中" | "整理中" | "待审批" | "已提交";
+
 const C = {
   bg: "#F7F6F2",
   surface: "#FFFFFF",
@@ -78,6 +80,32 @@ const customer = {
   risk: "medium",
   reviewState: "pending",
   yourMode: "owner",
+  summaryBlock: {
+    customerIdentity: {
+      name: "刘浩",
+      stage: "深度意向期",
+      profileLine: "38岁｜已婚｜技术决策型",
+    },
+    stateSummary: "当前处于双人决策阶段，配偶品牌偏好成为主要阻力。",
+    assignment: {
+      owner: { name: "王芳", role: "销售" },
+      collaborators: [
+        { name: "李明", role: "客服", type: "协同支持" },
+        { name: "赵晨", role: "售前", type: "待命支持" },
+      ],
+      supervisor: { name: "周岚", role: "销售经理", type: "管理监督" },
+    },
+    workflow: {
+      progressStatus: "销售推进中",
+      currentTask: "家庭体验邀约方案待确认",
+      risk: {
+        level: "中风险",
+        reason: "配偶品牌认知阻力未解决",
+      },
+      reviewStatus: "待销售经理确认",
+      mode: "负责人模式",
+    },
+  },
   confidence: 72,
   stateVersion: "v1.4",
   lastUpdated: "2024年11月17日 16:10",
@@ -449,112 +477,507 @@ function Header({ page }: HeaderProps) {
     sales: "销售轻记录",
     cs: "客服触达检查",
   };
-  const riskMap: Record<"high" | "medium" | "low", PillVariant> = { high: "red", medium: "amber", low: "green" };
-  const riskVariant = riskMap[customer.risk as "high" | "medium" | "low"];
+  const summary = customer.summaryBlock;
+
+  if (page === "workspace") {
+    return (
+      <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: "14px 28px" }}>
+        <div style={{ fontSize: 11.5, color: C.text2 }}>{pageTitles[page]}</div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: "14px 28px" }}>
       <div style={{ fontSize: 11.5, color: C.text2, marginBottom: 5 }}>{pageTitles[page]}</div>
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
-        <span style={{ fontSize: 20, fontWeight: 700, color: C.text0, marginRight: 4 }}>{customer.name}</span>
-        <StatusPill label={customer.stage} variant="blue" />
-        <StatusPill label={`负责人：${customer.currentOwner} · ${customer.ownerRole}`} variant="neutral" />
-        <StatusPill label={customer.routeStatus} variant="green" />
-        <StatusPill label={{ high: "高风险", medium: "中风险", low: "低风险" }[customer.risk as "high" | "medium" | "low"]} variant={riskVariant} />
-        {customer.reviewState === "pending" && <StatusPill label="待审核" variant="amber" />}
-        <StatusPill
-          label={customer.yourMode === "owner" ? "★ 负责人模式" : "仅查看"}
-          variant={customer.yourMode === "owner" ? "green" : "neutral"}
-        />
+      <div
+        style={{
+          background: C.surfaceAlt,
+          border: `1px solid ${C.border}`,
+          borderRadius: 16,
+          padding: "18px 20px",
+        }}
+      >
+        <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12 }}>
+          当前客户承接卡
+        </div>
+        <div className="header-summary-grid" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", gap: 16, alignItems: "start" }}>
+          <div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: C.text0, lineHeight: 1.15, marginBottom: 8 }}>{summary.customerIdentity.name}</div>
+            <div style={{ fontSize: 14, color: C.text1, lineHeight: 1.6, marginBottom: 12 }}>
+              <span style={{ fontWeight: 600, color: C.text0 }}>{summary.customerIdentity.stage}</span>
+              <span style={{ color: C.text3, margin: "0 8px" }}>｜</span>
+              {summary.customerIdentity.profileLine}
+            </div>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px", fontSize: 13.5, color: C.text1, lineHeight: 1.7 }}>
+              {summary.stateSummary}
+            </div>
+          </div>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 16px" }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.7, textTransform: "uppercase", marginBottom: 10 }}>当前责任结构</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontSize: 13, color: C.text1 }}>
+                当前 owner：<strong style={{ color: C.text0 }}>{summary.assignment.owner.name}</strong>（{summary.assignment.owner.role}）
+              </div>
+              {summary.assignment.collaborators.map((item) => (
+                <div key={item.type} style={{ fontSize: 13, color: C.text1 }}>
+                  {item.type}：<strong style={{ color: C.text0 }}>{item.name}</strong>（{item.role}）
+                </div>
+              ))}
+              <div style={{ fontSize: 13, color: C.text1 }}>
+                {summary.assignment.supervisor.type}：<strong style={{ color: C.text0 }}>{summary.assignment.supervisor.name}</strong>（{summary.assignment.supervisor.role}）
+              </div>
+            </div>
+          </div>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 16px" }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.7, textTransform: "uppercase", marginBottom: 10 }}>当前推进状态</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontSize: 13, color: C.text1 }}>
+                处理状态：<strong style={{ color: C.text0 }}>{summary.workflow.progressStatus}</strong>
+              </div>
+              <div style={{ fontSize: 13, color: C.text1 }}>
+                当前任务：<strong style={{ color: C.text0 }}>{summary.workflow.currentTask}</strong>
+              </div>
+              <div style={{ fontSize: 13, color: C.text1 }}>
+                当前风险：<Tag label={summary.workflow.risk.level} variant="amber" small /> <span style={{ marginLeft: 6 }}>{summary.workflow.risk.reason}</span>
+              </div>
+              <div style={{ fontSize: 13, color: C.text1 }}>
+                当前审核：<strong style={{ color: C.text0 }}>{summary.workflow.reviewStatus}</strong>
+              </div>
+              <div style={{ fontSize: 13, color: C.text1 }}>
+                当前模式：<strong style={{ color: C.text0 }}>{summary.workflow.mode}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+      <style>{`
+        @media (max-width: 980px) {
+          .header-summary-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }
 
 function WorkspacePage() {
-  const [workTab, setWorkTab] = useState<"history" | "ownerTasks">("history");
-  const [note, setNote] = useState("");
+  const [workTab, setWorkTab] = useState<"history" | "ownerTasks" | "assignment">("history");
+  const [taskPanelState, setTaskPanelState] = useState<TaskPanelState>("待执行");
+  const [executionInput, setExecutionInput] = useState("客户反馈：配偶愿意参加周末到店体验，但希望先看品牌对比和家庭空间体验。");
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const [uploadedMaterials, setUploadedMaterials] = useState([
+    { name: "第二次试驾客户语音纪要.m4a", type: "语音", time: "今天 14:10" },
+    { name: "家庭决策顾虑手写照片.jpg", type: "照片", time: "今天 14:18" },
+  ]);
+  const summary = customer.summaryBlock;
   const ownerEvents = customer.events.filter((event) => event.owner === customer.currentOwner);
+  const taskStateOptions: TaskPanelState[] = ["待执行", "执行中", "整理中", "待审批", "已提交"];
+  const reviewPacket = {
+    rawSummary: "本次执行共采集 2 份材料，确认配偶愿意参与到店体验，核心关注点集中在品牌认知、家庭空间体验和预算上限。",
+    interpretation:
+      "销售视角判断：客户从个人高意向推进到家庭双人决策阶段，配偶已从隐性阻力转为可被触达的关键影响者。当前任务重点不是继续讲参数，而是组织一次面向双人决策的体验场景。",
+    candidateUpdates: [
+      "新增关注点：家庭空间与品牌认知联合评估",
+      "更新异议：配偶品牌偏好从推测升级为已确认阻力",
+      "更新决策张力：技术体验满意，但家庭品牌认知尚未收敛",
+    ],
+    confidence: 76,
+    unresolvedQuestions: ["配偶最在意的是品牌形象还是二手保值？", "是否需要销售经理提前参与邀约确认？"],
+    roleRecommendation: "先由王芳发出家庭体验邀约，再由李明补充售后与服务说明，避免直接进入价格谈判。",
+    versionRecommendation: "主要版本",
+    versionReason: "本次材料改变了决策结构判断，建议进入主要版本更新。",
+  } as const;
+  const processingSteps = [
+    { label: "正在整理原始记录", status: "已完成" },
+    { label: "正在提取候选状态更新", status: "进行中" },
+    { label: "正在生成销售视角分析", status: "等待中" },
+  ] as const;
+
+  const uploadMaterials = () => {
+    const incoming =
+      selectedFiles.length > 0
+        ? selectedFiles.map((name, index) => ({ name, type: name.endsWith(".jpg") || name.endsWith(".png") ? "照片" : "语音", time: `今天 14:${28 + index}` }))
+        : [{ name: `门店补充跟进记录_${uploadedMaterials.length + 1}.wav`, type: "语音", time: "今天 14:30" }];
+
+    setUploadedMaterials((prev) => [...prev, ...incoming]);
+    setSelectedFiles([]);
+  };
+
+  const renderTaskStateBody = () => {
+    if (taskPanelState === "待执行") {
+      return (
+        <div style={{ display: "grid", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 14 }} className="task-state-grid">
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>任务标题</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: C.text0, marginBottom: 6 }}>{customer.currentTask.title}</div>
+              <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.65 }}>{customer.currentTask.why}</div>
+            </div>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>任务元信息</div>
+              <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.75 }}>时间窗口：{customer.currentTask.timeWindow}</div>
+              <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.75 }}>审核级别：{customer.currentTask.reviewState}</div>
+            </div>
+          </div>
+          <div className="task-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 14 }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>建议动作</div>
+              <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{customer.currentTask.recommendedAction}</div>
+            </div>
+            <div style={{ background: C.surface, border: `1px solid ${C.redBorder}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>受限事项</div>
+              {customer.currentTask.blockedActions.map((action) => (
+                <div key={action} style={{ display: "flex", gap: 6, marginBottom: 5 }}>
+                  <span style={{ color: C.red, fontWeight: 700, flexShrink: 0 }}>✕</span>
+                  <span style={{ fontSize: 12, color: C.text1, lineHeight: 1.5 }}>{action}</span>
+                </div>
+              ))}
+            </div>
+            <AgentBlock text={customer.currentTask.agentDraft} label="助手草稿" />
+          </div>
+        </div>
+      );
+    }
+
+    if (taskPanelState === "执行中") {
+      return (
+        <div style={{ display: "grid", gap: 14 }}>
+          <div className="task-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 14 }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>建议动作</div>
+              <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{customer.currentTask.recommendedAction}</div>
+            </div>
+            <div style={{ background: C.surface, border: `1px solid ${C.redBorder}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>受限事项</div>
+              {customer.currentTask.blockedActions.map((action) => (
+                <div key={action} style={{ display: "flex", gap: 6, marginBottom: 5 }}>
+                  <span style={{ color: C.red, fontWeight: 700, flexShrink: 0 }}>✕</span>
+                  <span style={{ fontSize: 12, color: C.text1, lineHeight: 1.5 }}>{action}</span>
+                </div>
+              ))}
+            </div>
+            <AgentBlock text={customer.currentTask.agentDraft} label="助手草稿" />
+          </div>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>输入用户第一手信息</div>
+            <textarea
+              value={executionInput}
+              onChange={(e) => setExecutionInput(e.target.value)}
+              placeholder="记录刚刚获取到的客户原话、家庭成员反馈、现场观察等……"
+              style={{
+                width: "100%",
+                border: `1.5px solid ${C.border}`,
+                borderRadius: 8,
+                background: C.surfaceAlt,
+                color: C.text0,
+                fontSize: 13,
+                padding: "10px 12px",
+                resize: "vertical",
+                minHeight: 96,
+                outline: "none",
+                fontFamily: C.sans,
+              }}
+            />
+          </div>
+          <div className="task-state-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 14 }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>文件上传入口</div>
+              <label
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  border: `1px dashed ${C.borderMd}`,
+                  borderRadius: 8,
+                  padding: "10px 12px",
+                  fontSize: 13,
+                  color: C.text1,
+                  background: C.surfaceAlt,
+                  cursor: "pointer",
+                  marginBottom: 10,
+                }}
+              >
+                <span>{selectedFiles.length > 0 ? `已选择 ${selectedFiles.length} 个文件` : "选择语音、照片等材料"}</span>
+                <span style={{ color: C.blue, fontWeight: 600 }}>浏览文件</span>
+                <input
+                  type="file"
+                  multiple
+                  style={{ display: "none" }}
+                  onChange={(e) => setSelectedFiles(Array.from(e.target.files ?? []).map((file) => file.name))}
+                />
+              </label>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <SecondaryBtn onClick={uploadMaterials}>一键上传</SecondaryBtn>
+                <span style={{ fontSize: 12, color: C.text2, alignSelf: "center" }}>支持语音、图片、现场备注截图</span>
+              </div>
+            </div>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>已上传材料列表</div>
+              {uploadedMaterials.map((item, index) => (
+                <Row key={`${item.name}-${index}`} last={index === uploadedMaterials.length - 1}>
+                  <Tag label={item.type} variant={item.type === "照片" ? "blue" : "neutral"} small />
+                  <span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{item.name}</span>
+                  <span style={{ fontSize: 11.5, color: C.text2 }}>{item.time}</span>
+                </Row>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (taskPanelState === "整理中") {
+      return (
+        <div style={{ display: "grid", gap: 14 }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>已上传材料清单</div>
+            {uploadedMaterials.map((item, index) => (
+              <Row key={`${item.name}-${index}`} last={index === uploadedMaterials.length - 1}>
+                <Tag label={item.type} variant={item.type === "照片" ? "blue" : "neutral"} small />
+                <span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{item.name}</span>
+                <span style={{ fontSize: 11.5, color: C.text2 }}>{item.time}</span>
+              </Row>
+            ))}
+          </div>
+          <div style={{ background: C.blueLight, border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.blue, marginBottom: 10 }}>助手整理中...</div>
+            {processingSteps.map((step, index) => (
+              <div key={step.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: index === processingSteps.length - 1 ? "8px 0 0" : "8px 0", borderBottom: index === processingSteps.length - 1 ? "none" : `1px solid ${C.blueBorder}` }}>
+                <span style={{ fontSize: 13, color: C.text0 }}>{step.label}</span>
+                <Tag label={step.status} variant={step.status === "已完成" ? "green" : step.status === "进行中" ? "blue" : "neutral"} small />
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (taskPanelState === "待审批") {
+      return (
+        <div style={{ display: "grid", gap: 14 }}>
+          <div className="task-state-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 14 }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>原始材料摘要</div>
+              <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>{reviewPacket.rawSummary}</div>
+            </div>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>推荐版本</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <Tag label={reviewPacket.versionRecommendation} variant={reviewPacket.versionRecommendation === "主要版本" ? "amber" : "neutral"} />
+              </div>
+              <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.65 }}>{reviewPacket.versionReason}</div>
+            </div>
+          </div>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>销售视角解读</div>
+            <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>{reviewPacket.interpretation}</div>
+          </div>
+          <div className="task-state-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 14 }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.greenBorder}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>候选状态更新</div>
+              {reviewPacket.candidateUpdates.map((item) => (
+                <div key={item} style={{ display: "flex", gap: 8, alignItems: "center", padding: "7px 10px", background: C.greenLight, borderRadius: 7, marginBottom: 6, border: `1px solid ${C.greenBorder}` }}>
+                  <span style={{ color: C.green, fontWeight: 700 }}>+</span>
+                  <span style={{ fontSize: 13, color: C.text0 }}>{item}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "grid", gap: 14 }}>
+              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>置信度</div>
+                <ConfidenceBar value={reviewPacket.confidence} />
+              </div>
+              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>未决问题</div>
+                {reviewPacket.unresolvedQuestions.map((item, index) => (
+                  <Row key={item} last={index === reviewPacket.unresolvedQuestions.length - 1}>
+                    <span style={{ color: C.red, fontWeight: 700 }}>?</span>
+                    <span style={{ fontSize: 13, color: C.text0 }}>{item}</span>
+                  </Row>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div style={{ background: C.surfaceAlt, borderRadius: 10, padding: "12px 14px", border: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>本角色建议动作</div>
+            <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>{reviewPacket.roleRecommendation}</div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ display: "grid", gap: 14 }}>
+        <div style={{ background: C.greenLight, border: `1px solid ${C.greenBorder}`, borderRadius: 10, padding: "14px 16px" }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: C.green, marginBottom: 8 }}>任务已提交</div>
+          <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.75 }}>
+            本次任务结果已提交，新的事件条目将进入客户触达任务历史。系统接下来会触发状态更新评估，并等待编排助手重新安排下一步动作。
+          </div>
+        </div>
+        <div className="task-state-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>事件去向</div>
+            <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>事件已进入任务历史，等待销售与状态编排链路继续处理。</div>
+          </div>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>下一步系统动作</div>
+            <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>等待状态更新结果，随后由编排助手判断是否需要调整 owner、协同角色与下个任务窗口。</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderTaskStateActions = () => {
+    if (taskPanelState === "待执行") {
+      return (
+        <>
+          <PrimaryBtn onClick={() => setTaskPanelState("执行中")}>开始执行</PrimaryBtn>
+          <SecondaryBtn>修改计划</SecondaryBtn>
+          <DangerBtn>升级处理</DangerBtn>
+        </>
+      );
+    }
+
+    if (taskPanelState === "执行中") {
+      return (
+        <>
+          <PrimaryBtn onClick={uploadMaterials}>提交材料</PrimaryBtn>
+          <SecondaryBtn>暂存草稿</SecondaryBtn>
+          <SecondaryBtn onClick={() => setTaskPanelState("整理中")}>完成执行，开始整理</SecondaryBtn>
+        </>
+      );
+    }
+
+    if (taskPanelState === "整理中") {
+      return <SecondaryBtn onClick={() => setTaskPanelState("执行中")}>返回修改</SecondaryBtn>;
+    }
+
+    if (taskPanelState === "待审批") {
+      return (
+        <>
+          <PrimaryBtn onClick={() => setTaskPanelState("已提交")}>审批并提交事件结果</PrimaryBtn>
+          <SecondaryBtn onClick={() => setTaskPanelState("已提交")}>修改后提交</SecondaryBtn>
+          <DangerBtn onClick={() => setTaskPanelState("执行中")}>驳回分析结果</DangerBtn>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <SecondaryBtn onClick={() => setWorkTab("history")}>查看任务历史</SecondaryBtn>
+        <SecondaryBtn onClick={() => setWorkTab("history")}>查看状态更新结果</SecondaryBtn>
+        <PrimaryBtn onClick={() => setTaskPanelState("待执行")}>返回工作台</PrimaryBtn>
+      </>
+    );
+  };
 
   return (
     <div>
       <Header page="workspace" />
-      {customer.yourMode === "owner" && (
-        <div style={{ background: "#FFFBF0", borderBottom: `1px solid ${C.amberBorder}`, padding: "16px 28px" }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-              <div style={{ flex: 1, minWidth: 280 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: C.amber, letterSpacing: 0.7, textTransform: "uppercase" }}>
-                    负责人专属当前任务
-                  </span>
-                  <Tag label="仅负责人可见" variant="amber" small />
-                  <Tag label={`时间窗口：${customer.currentTask.timeWindow}`} variant="neutral" small />
+      <div style={{ maxWidth: 1200, margin: "24px auto", padding: "0 28px" }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12 }}>
+          当前判断与当前任务
+        </div>
+        <div className="top-dual" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
+          <Card style={{ background: C.surfaceAlt }}>
+            <CardPad>
+              <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12 }}>
+                当前客户承接卡
+              </div>
+              <div style={{ fontSize: 30, fontWeight: 700, color: C.text0, lineHeight: 1.1, marginBottom: 8 }}>{summary.customerIdentity.name}</div>
+              <div style={{ fontSize: 14, color: C.text1, lineHeight: 1.6, marginBottom: 14 }}>
+                <span style={{ fontWeight: 600, color: C.text0 }}>{summary.customerIdentity.stage}</span>
+                <span style={{ color: C.text3, margin: "0 8px" }}>｜</span>
+                {summary.customerIdentity.profileLine}
+              </div>
+              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px", fontSize: 13.5, color: C.text1, lineHeight: 1.7, marginBottom: 14 }}>
+                {summary.stateSummary}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                <div style={{ fontSize: 13, color: C.text1 }}>
+                  当前 owner：<strong style={{ color: C.text0 }}>{summary.assignment.owner.name}</strong>（{summary.assignment.owner.role}）
                 </div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: C.text0, marginBottom: 5 }}>{customer.currentTask.title}</div>
-                <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.6, maxWidth: 600 }}>{customer.currentTask.why}</div>
+                <div style={{ fontSize: 13, color: C.text1 }}>
+                  当前风险：<Tag label={summary.workflow.risk.level} variant="amber" small /> <span style={{ marginLeft: 6 }}>{summary.workflow.risk.reason}</span>
+                </div>
+                <div style={{ fontSize: 13, color: C.text1 }}>
+                  当前审核：<strong style={{ color: C.text0 }}>{summary.workflow.reviewStatus}</strong>
+                </div>
+                <button
+                  onClick={() => setWorkTab("assignment")}
+                  style={{
+                    marginTop: 2,
+                    padding: 0,
+                    border: "none",
+                    background: "none",
+                    color: C.blue,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    textAlign: "left",
+                    cursor: "pointer",
+                  }}
+                >
+                  查看责任协同详情 &gt;
+                </button>
               </div>
-              <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap", alignItems: "flex-start" }}>
-                <Tag label="需要审核" variant="amber" />
-                <PrimaryBtn>审核并提交</PrimaryBtn>
-                <SecondaryBtn>修改</SecondaryBtn>
-                <DangerBtn>升级处理</DangerBtn>
-              </div>
-            </div>
+            </CardPad>
+          </Card>
 
-            <div className="task-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 14, marginTop: 16 }}>
-              <div style={{ background: C.surface, border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "12px 14px" }}>
-                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  建议动作
-                </div>
-                <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{customer.currentTask.recommendedAction}</div>
-              </div>
-              <div style={{ background: C.surface, border: `1px solid ${C.redBorder}`, borderRadius: 10, padding: "12px 14px" }}>
-                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  受限事项
-                </div>
-                {customer.currentTask.blockedActions.map((action) => (
-                  <div key={action} style={{ display: "flex", gap: 6, marginBottom: 5 }}>
-                    <span style={{ color: C.red, fontWeight: 700, flexShrink: 0 }}>✕</span>
-                    <span style={{ fontSize: 12, color: C.text1, lineHeight: 1.5 }}>{action}</span>
+          <Card style={{ background: "#FFFBF0", borderColor: C.amberBorder }}>
+            <CardPad>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 12 }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: C.amber, letterSpacing: 0.8, textTransform: "uppercase" }}>负责人专属当前任务</div>
+                    <Tag label="仅负责人可见" variant="amber" small />
+                    <Tag label={`时间窗口：${customer.currentTask.timeWindow}`} variant="neutral" small />
                   </div>
+                  <div style={{ fontSize: 12.5, color: C.text2 }}>人机协作任务面板</div>
+                </div>
+                <Tag label={`当前状态：${taskPanelState}`} variant={taskPanelState === "已提交" ? "green" : taskPanelState === "待审批" ? "amber" : taskPanelState === "整理中" ? "blue" : "neutral"} />
+              </div>
+
+              <div style={{ display: "flex", background: C.surface, borderRadius: 10, padding: 4, border: `1px solid ${C.amberBorder}`, marginBottom: 14, overflowX: "auto" }}>
+                {taskStateOptions.map((state) => (
+                  <button
+                    key={state}
+                    onClick={() => setTaskPanelState(state)}
+                    style={{
+                      flex: 1,
+                      minWidth: 92,
+                      padding: "8px 10px",
+                      borderRadius: 8,
+                      background: taskPanelState === state ? "#FFF7E6" : "none",
+                      border: taskPanelState === state ? `1px solid ${C.amberBorder}` : "1px solid transparent",
+                      color: taskPanelState === state ? C.text0 : C.text2,
+                      fontSize: 12.5,
+                      fontWeight: taskPanelState === state ? 600 : 400,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {state}
+                  </button>
                 ))}
               </div>
-              <div style={{ background: "#F5F3FF", border: "1px solid #DDD6FE", borderRadius: 10, padding: "12px 14px" }}>
-                <div style={{ fontSize: 10.5, fontWeight: 600, color: "#6D28D9", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  助手草稿
-                </div>
-                <div style={{ fontSize: 12, color: "#4C1D95", lineHeight: 1.65, fontStyle: "italic" }}>{customer.currentTask.agentDraft}</div>
+
+              {renderTaskStateBody()}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+                {renderTaskStateActions()}
               </div>
-            </div>
-
-            <div style={{ marginTop: 12 }}>
-              <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="提交前补充你的备注或调整意见……"
-                style={{
-                  width: "100%",
-                  border: `1.5px solid ${C.amberBorder}`,
-                  borderRadius: 8,
-                  background: C.surface,
-                  color: C.text0,
-                  fontSize: 13,
-                  padding: "9px 12px",
-                  resize: "vertical",
-                  minHeight: 56,
-                  outline: "none",
-                  fontFamily: C.sans,
-                }}
-              />
-            </div>
-          </div>
+            </CardPad>
+          </Card>
         </div>
-      )}
 
-      <div className="two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, maxWidth: 1200, margin: "24px auto", padding: "0 28px" }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12 }}>
+          详细信息层
+        </div>
+      </div>
+
+      <div className="two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, maxWidth: 1200, margin: "0 auto 24px", padding: "0 28px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase" }}>客户状态区</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase" }}>客户状态详情</div>
 
           <Card>
             <CardPad>
@@ -704,15 +1127,16 @@ function WorkspacePage() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase" }}>工作区</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase" }}>事件与版本</div>
           <div style={{ display: "flex", background: C.surfaceAlt, borderRadius: 10, padding: 4, border: `1px solid ${C.border}` }}>
             {[
               { id: "history", label: "客户触达任务历史" },
               { id: "ownerTasks", label: "我负责的任务" },
+              { id: "assignment", label: "责任协同详情" },
             ].map((item) => (
               <button
                 key={item.id}
-                onClick={() => setWorkTab(item.id as "history" | "ownerTasks")}
+                onClick={() => setWorkTab(item.id as "history" | "ownerTasks" | "assignment")}
                 style={{
                   flex: 1,
                   padding: "8px 0",
@@ -800,6 +1224,33 @@ function WorkspacePage() {
                     当前责任人暂无客户触达记录。
                   </div>
                 )}
+              </CardPad>
+            </Card>
+          )}
+          {workTab === "assignment" && (
+            <Card>
+              <CardPad style={{ paddingBottom: 8 }}>
+                <div style={{ fontSize: 11, color: C.text2, marginBottom: 4 }}>当前 owner</div>
+                <div style={{ fontSize: 18, color: C.text0, fontWeight: 700, marginBottom: 16 }}>
+                  {summary.assignment.owner.name}（{summary.assignment.owner.role}）
+                </div>
+                <SectionTitle>责任协同详情</SectionTitle>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
+                    <div style={{ fontSize: 13, color: C.text1 }}>销售</div>
+                    <div style={{ fontSize: 14, color: C.text0, fontWeight: 700, textAlign: "right" }}>{summary.assignment.owner.name}</div>
+                  </div>
+                  {summary.assignment.collaborators.map((item) => (
+                    <div key={item.type} style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
+                      <div style={{ fontSize: 13, color: C.text1 }}>{item.role}</div>
+                      <div style={{ fontSize: 14, color: C.text0, fontWeight: 700, textAlign: "right" }}>{item.name}</div>
+                    </div>
+                  ))}
+                  <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
+                    <div style={{ fontSize: 13, color: C.text1 }}>{summary.assignment.supervisor.role}</div>
+                    <div style={{ fontSize: 14, color: C.text0, fontWeight: 700, textAlign: "right" }}>{summary.assignment.supervisor.name}</div>
+                  </div>
+                </div>
               </CardPad>
             </Card>
           )}
@@ -1216,8 +1667,10 @@ export default function App() {
         textarea:focus { border-color: ${C.blue} !important; box-shadow: 0 0 0 3px ${C.blueLight}; outline: none; }
         button:hover { opacity: 0.88; }
         @media (max-width: 980px) {
+          .top-dual,
           .two-col,
           .split-grid,
+          .task-state-grid,
           .task-grid,
           .mini-grid { grid-template-columns: 1fr !important; }
         }
