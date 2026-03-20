@@ -117,27 +117,68 @@ const customer = {
   lastUpdated: "2024年11月17日 16:10",
   stateSummary:
     "客户已完成第二次试驾，对辅助驾驶体验满意，但对价格区间仍有抵触。近期配偶加入决策链，决策时间线可能延长 1 至 2 周。",
-  persona: {
-    "年龄 / 家庭": "38岁，已婚，两子",
-    "职业背景": "软件公司技术总监，理性决策型",
-    "预算区间": "35 至 42 万元（设有上限）",
-    "决策风格": "数据驱动，需充分比较后推进",
-    "交付意向": "春节前，实际窗口约 3 周",
+  customerStateDetail: {
+    summary: {
+      stateVersion: "v1.4",
+      updatedAt: "2024年11月17日 16:10",
+      summaryText: "技术体验认可度已形成，但家庭共识与服务信任尚未闭环，当前不宜直接进入成交推进。",
+    },
+    decisionRelevantTraits: [
+      {
+        label: "决策结构",
+        value: "已婚，配偶已加入决策",
+        impact: "当前关系模式已从单人评估转向双人协商，关键动作需面向双方共同推进。",
+      },
+      {
+        label: "信息偏好",
+        value: "理性比对型，重视实测与参数对照",
+        impact: "当前动作更适合提供对比材料与实测证据，而不是直接推进情绪型逼单。",
+      },
+      {
+        label: "预算边界",
+        value: "35 至 42 万元，存在明确上限",
+        impact: "价格 objection 会持续影响推进节奏，金融方案验证前不适合定型报价策略。",
+      },
+      {
+        label: "时间窗口",
+        value: "春节前提车意愿明确，实际窗口约 3 周",
+        impact: "若 1 至 2 周内无法收敛家庭共识，将直接压缩成交推进与交付排产窗口。",
+      },
+    ],
+    actionable: [
+      "当前处于深度意向期，仍有继续推进的业务价值。",
+      "智能驾驶体验是主要吸引点，可作为家庭体验邀约的切入口。",
+      "当前 owner 仍应由销售主导，客服与售前提供材料支持即可。",
+      "下一步更适合推进家庭体验邀约，而不是直接进入成交推进或价格逼单。",
+    ],
+    toValidate: [
+      "配偶真实顾虑是否主要来自品牌偏好，而非预算顾虑。",
+      "金融方案能否将月供压到客户可接受区间。",
+      "售后响应承诺是否足以消除服务信任问题。",
+    ],
+    tension: {
+      drivers: ["第二次试驾后对辅助驾驶体验满意", "技术体验认可度高", "春节前交付意愿明确"],
+      blockers: ["配偶偏好传统品牌", "价格较竞品高 2–3 万", "售后覆盖与服务信任尚未充分建立"],
+      core: "技术体验已通过，但家庭共识与品牌信任尚未通过。",
+    },
+    evidenceGaps: [
+      {
+        gap: "配偶真实顾虑未被直接验证",
+        affects: "关系模式和 objection 判断",
+        impact: "当前不宜直接进入成交推进，否则动作会建立在错误阻力判断上。",
+      },
+      {
+        gap: "金融承受区间未确认",
+        affects: "推荐动作与报价策略",
+        impact: "当前报价节奏不能定型，容易提前触发价格防御。",
+      },
+      {
+        gap: "售后承诺文件未核实",
+        affects: "服务信任判断",
+        impact: "售后 objection 仍未闭环，无法确认是否适合推进签约相关动作。",
+      },
+    ],
   },
-  priorities: [
-    { item: "智能驾驶辅助体验（导航辅助驾驶）", weight: "高", status: "verified", statusLabel: "已验证满意" },
-    { item: "续航实测与官方数据对比", weight: "高", status: "concern", statusLabel: "仍有疑虑" },
-    { item: "售后服务覆盖（成都区域）", weight: "中", status: "pending", statusLabel: "未充分沟通" },
-    { item: "金融方案灵活性", weight: "中", status: "pending", statusLabel: "待提供方案" },
-  ],
-  objections: [
-    { text: "价格比竞品高 2–3 万", severity: "high", resolved: false },
-    { text: "配偶偏好传统品牌（宝马/奔驰）", severity: "high", resolved: false },
-    { text: "充电桩在居住区覆盖不足", severity: "medium", resolved: false },
-    { text: "冬季续航衰减担忧", severity: "low", resolved: true },
-  ],
-  decisionTension:
-    "配偶加入后形成双核决策结构。刘浩主导技术偏好，配偶持品牌否决倾向。核心张力：技术体验与品牌社会认知。",
   unresolvedQuestions: [
     "配偶的具体顾虑是否被直接倾听过？",
     "金融方案能否实现月供低于 6,000 元？",
@@ -170,7 +211,7 @@ const customer = {
       typeLabel: "状态更新",
       owner: "系统",
       date: "11月17日",
-      summary: "状态升级：「配偶决策参与」列为高优先级阻力，置信度下调至 72%。",
+      summary: "状态升级：「配偶决策参与」列为高优先级阻力，当前进入双人决策验证阶段。",
       status: "自动",
     },
     {
@@ -197,7 +238,7 @@ const customer = {
       version: "v1.4",
       level: "重要更新",
       trigger: "E-040 · 配偶加入决策链",
-      changed: ["决策张力", "异议项增加 1 条", "置信度 78→72", "优先事项增加 1 项"],
+      changed: ["决策张力结构", "待验证项增加 1 条", "决策结构更新", "优先事项增加 1 项"],
       approvedBy: "王芳",
       agents: ["状态整理助手", "旅程编排助手"],
       note: "决策结构变化触发重要更新，需销售经理知悉。",
@@ -979,6 +1020,7 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
     { name: "家庭决策顾虑手写照片.jpg", type: "照片", time: "今天 14:18" },
   ]);
   const summary = customer.summaryBlock;
+  const stateDetail = customer.customerStateDetail;
   const ownerEvents = customer.events.filter((event) => event.owner === customer.currentOwner);
   const reviewPacket = {
     rawSummary: "本次执行共采集 2 份材料，确认配偶愿意参与到店体验，核心关注点集中在品牌认知、家庭空间体验和预算上限。",
@@ -1368,21 +1410,32 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
           <Card>
             <CardPad>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <SectionTitle>客户状态概要 · {customer.stateVersion}</SectionTitle>
-                <Tag label={customer.lastUpdated} variant="neutral" small />
+                <SectionTitle>Customer State 摘要</SectionTitle>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  <Tag label={`最新状态版本：${stateDetail.summary.stateVersion}`} variant="blue" small />
+                  <Tag label={`更新时间：${stateDetail.summary.updatedAt}`} variant="neutral" small />
+                </div>
               </div>
-              <div style={{ fontSize: 13.5, color: C.text0, lineHeight: 1.75, marginBottom: 14 }}>{customer.stateSummary}</div>
-              <ConfidenceBar value={customer.confidence} />
+              <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 12, color: C.text2, marginBottom: 6 }}>当前摘要</div>
+                <div style={{ fontSize: 13.5, color: C.text0, lineHeight: 1.75 }}>{stateDetail.summary.summaryText}</div>
+              </div>
             </CardPad>
           </Card>
           <div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <Card>
               <CardPad style={{ paddingBottom: 4 }}>
-                <SectionTitle>画像概览</SectionTitle>
-                {Object.entries(customer.persona).map(([key, value], index, list) => (
-                  <Row key={key} last={index === list.length - 1}>
-                    <span style={{ fontSize: 12, color: C.text2, minWidth: 100 }}>{key}</span>
-                    <span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{value}</span>
+                <SectionTitle>判断相关特征</SectionTitle>
+                {stateDetail.decisionRelevantTraits.map((trait, index) => (
+                  <Row key={trait.label} last={index === stateDetail.decisionRelevantTraits.length - 1} style={{ alignItems: "flex-start" }}>
+                    <div style={{ minWidth: 110, paddingTop: 2 }}>
+                      <div style={{ fontSize: 12, color: C.text2, marginBottom: 5 }}>{trait.label}</div>
+                      <div style={{ fontSize: 13, color: C.text0, fontWeight: 600, lineHeight: 1.6 }}>{trait.value}</div>
+                    </div>
+                    <div style={{ flex: 1, background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 12px" }}>
+                      <div style={{ fontSize: 11, color: C.text2, marginBottom: 4 }}>对当前判断的影响</div>
+                      <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>{trait.impact}</div>
+                    </div>
                   </Row>
                 ))}
               </CardPad>
@@ -1390,51 +1443,72 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
 
             <Card>
               <CardPad style={{ paddingBottom: 4 }}>
-                <SectionTitle>关注重点</SectionTitle>
-                {customer.priorities.map((priority, index) => (
-                  <Row key={priority.item} last={index === customer.priorities.length - 1}>
-                    <span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{priority.item}</span>
-                    <Tag label={priority.weight} variant={priority.weight === "高" ? "blue" : "neutral"} small />
-                    <Tag
-                      label={priority.statusLabel}
-                      variant={priority.status === "verified" ? "green" : priority.status === "concern" ? "amber" : "neutral"}
-                      small
-                    />
-                  </Row>
-                ))}
-              </CardPad>
-            </Card>
+                <div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                  <div style={{ border: `1px solid ${C.greenBorder}`, borderRadius: 10, overflow: "hidden" }}>
+                    <div style={{ padding: "10px 12px", background: C.greenLight, borderBottom: `1px solid ${C.greenBorder}`, fontSize: 12, fontWeight: 700, color: C.green }}>
+                      可行动
+                    </div>
+                    <div style={{ padding: "0 12px" }}>
+                      {stateDetail.actionable.map((item, index) => (
+                        <Row key={item} last={index === stateDetail.actionable.length - 1}>
+                          <span style={{ color: C.green, fontWeight: 700, fontSize: 14 }}>✓</span>
+                          <span style={{ fontSize: 13, color: C.text0, lineHeight: 1.7 }}>{item}</span>
+                        </Row>
+                      ))}
+                    </div>
+                  </div>
 
-            <Card style={{ borderColor: customer.objections.some((item) => !item.resolved && item.severity === "high") ? C.redBorder : C.border }}>
-              <CardPad style={{ paddingBottom: 4 }}>
-                <SectionTitle>顾虑</SectionTitle>
-                {customer.objections.map((objection, index) => (
-                  <Row key={objection.text} last={index === customer.objections.length - 1}>
-                    <div
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        flexShrink: 0,
-                        background: objection.resolved ? C.green : objection.severity === "high" ? C.red : C.amber,
-                      }}
-                    />
-                    <span style={{ fontSize: 13, color: objection.resolved ? C.text2 : C.text0, flex: 1 }}>{objection.text}</span>
-                    {objection.resolved ? (
-                      <StatusPill label="✓ 已解决" variant="green" />
-                    ) : (
-                      <Tag label={objection.severity === "high" ? "高" : objection.severity === "medium" ? "中" : "低"} variant={objection.severity === "high" ? "red" : "amber"} small />
-                    )}
-                  </Row>
-                ))}
+                  <div style={{ border: `1px solid ${C.amberBorder}`, borderRadius: 10, overflow: "hidden" }}>
+                    <div style={{ padding: "10px 12px", background: C.amberLight, borderBottom: `1px solid ${C.amberBorder}`, fontSize: 12, fontWeight: 700, color: C.amber }}>
+                      待验证
+                    </div>
+                    <div style={{ padding: "0 12px" }}>
+                      {stateDetail.toValidate.map((item, index) => (
+                        <Row key={item} last={index === stateDetail.toValidate.length - 1}>
+                          <span style={{ color: C.amber, fontWeight: 700, fontSize: 14 }}>?</span>
+                          <span style={{ fontSize: 13, color: C.text0, lineHeight: 1.7 }}>{item}</span>
+                        </Row>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </CardPad>
             </Card>
 
             <Card style={{ borderColor: C.amberBorder }}>
               <CardPad>
-                <SectionTitle>决策张力</SectionTitle>
-                <div style={{ background: C.amberLight, borderLeft: `3px solid ${C.amber}`, borderRadius: 6, padding: "10px 14px", fontSize: 13, color: "#92400E", lineHeight: 1.7 }}>
-                  {customer.decisionTension}
+                <SectionTitle>决策张力结构</SectionTitle>
+                <div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                  <div style={{ border: `1px solid ${C.greenBorder}`, borderRadius: 10, overflow: "hidden" }}>
+                    <div style={{ padding: "10px 12px", background: C.greenLight, borderBottom: `1px solid ${C.greenBorder}`, fontSize: 12, fontWeight: 700, color: C.green }}>
+                      推进因素
+                    </div>
+                    <div style={{ padding: "0 12px" }}>
+                      {stateDetail.tension.drivers.map((item, index) => (
+                        <Row key={item} last={index === stateDetail.tension.drivers.length - 1}>
+                          <span style={{ color: C.green, fontWeight: 700 }}>+</span>
+                          <span style={{ fontSize: 13, color: C.text0, lineHeight: 1.7 }}>{item}</span>
+                        </Row>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ border: `1px solid ${C.redBorder}`, borderRadius: 10, overflow: "hidden" }}>
+                    <div style={{ padding: "10px 12px", background: C.redLight, borderBottom: `1px solid ${C.redBorder}`, fontSize: 12, fontWeight: 700, color: C.red }}>
+                      阻滞因素
+                    </div>
+                    <div style={{ padding: "0 12px" }}>
+                      {stateDetail.tension.blockers.map((item, index) => (
+                        <Row key={item} last={index === stateDetail.tension.blockers.length - 1}>
+                          <span style={{ color: C.red, fontWeight: 700 }}>-</span>
+                          <span style={{ fontSize: 13, color: C.text0, lineHeight: 1.7 }}>{item}</span>
+                        </Row>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ marginTop: 14, background: C.amberLight, borderLeft: `3px solid ${C.amber}`, borderRadius: 8, padding: "10px 14px" }}>
+                  <div style={{ fontSize: 11, color: C.text2, marginBottom: 6 }}>当前核心张力</div>
+                  <div style={{ fontSize: 13, color: "#92400E", lineHeight: 1.7 }}>{stateDetail.tension.core}</div>
                 </div>
               </CardPad>
             </Card>
@@ -1442,13 +1516,28 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
             <Card style={{ gridColumn: "1 / -1" }}>
               <CardPad style={{ paddingBottom: 4 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <SectionTitle>未决问题</SectionTitle>
-                  <Tag label={`待解 ${customer.unresolvedQuestions.length} 项`} variant="red" small />
+                  <SectionTitle>待补证据 / 不确定性来源</SectionTitle>
+                  <Tag label={`当前 ${stateDetail.evidenceGaps.length} 项`} variant="red" small />
                 </div>
-                {customer.unresolvedQuestions.map((question, index) => (
-                  <Row key={question} last={index === customer.unresolvedQuestions.length - 1}>
-                    <span style={{ color: C.red, fontSize: 15, flexShrink: 0, fontWeight: 700 }}>?</span>
-                    <span style={{ fontSize: 13, color: C.text0 }}>{question}</span>
+                {stateDetail.evidenceGaps.map((item, index) => (
+                  <Row key={item.gap} last={index === stateDetail.evidenceGaps.length - 1} style={{ alignItems: "flex-start" }}>
+                    <div style={{ width: 26, height: 26, borderRadius: 13, background: C.redLight, color: C.red, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
+                      !
+                    </div>
+                    <div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr", gap: 12, width: "100%" }}>
+                      <div>
+                        <div style={{ fontSize: 11, color: C.text2, marginBottom: 4 }}>缺的证据</div>
+                        <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.7 }}>{item.gap}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 11, color: C.text2, marginBottom: 4 }}>影响哪个判断</div>
+                        <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>{item.affects}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 11, color: C.text2, marginBottom: 4 }}>为什么限制动作</div>
+                        <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>{item.impact}</div>
+                      </div>
+                    </div>
                   </Row>
                 ))}
               </CardPad>
