@@ -36,13 +36,19 @@ type HeaderProps = {
   page: PageId;
 };
 
+type WorkspacePageProps = {
+  taskPanelState: TaskPanelState;
+  setTaskPanelState: (state: TaskPanelState) => void;
+  onOpenMessages: () => void;
+};
+
 type ButtonProps = {
   children: ReactNode;
   onClick?: () => void;
   style?: CSSProperties;
 };
 
-type TaskPanelState = "待执行" | "执行中" | "整理中" | "待审批" | "已提交";
+type TaskPanelState = "待执行" | "整理中" | "待审批" | "已提交";
 
 const C = {
   bg: "#F7F6F2",
@@ -238,6 +244,15 @@ const customer = {
     script:
       "「刘总，想问问您周末有没有时间，我们有个家庭体验活动，主要让家人也感受一下……」（角色助手可生成完整版，人工确认后使用）",
   },
+} as const;
+
+const profileUpdatePacket = {
+  title: "确认客户画像更新",
+  status: "待确认",
+  priorities: ["配偶认可度（新增，优先级高）", "品牌认知与功能体验的决策权重"],
+  objections: ["配偶偏好传统品牌（新增）", "价格偏高（确认，持续）"],
+  tension: "家庭内部决策分歧：功能主导（刘浩）与品牌社会认知（配偶）",
+  evidence: ["「他老婆更想买奔驰」→ 配偶主动偏好", "「觉得不够档次」→ 品牌感知障碍", "「价格高了点」→ 价格阻力确认"],
 } as const;
 
 function StatusPill({ label, variant }: StatusPillProps) {
@@ -560,9 +575,10 @@ function Header({ page }: HeaderProps) {
   );
 }
 
-function WorkspacePage() {
+function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: WorkspacePageProps) {
   const [workTab, setWorkTab] = useState<"history" | "ownerTasks" | "assignment">("history");
-  const [taskPanelState, setTaskPanelState] = useState<TaskPanelState>("待执行");
+  const [versionTraceExpanded, setVersionTraceExpanded] = useState(false);
+  const [inputModalOpen, setInputModalOpen] = useState(false);
   const [executionInput, setExecutionInput] = useState("客户反馈：配偶愿意参加周末到店体验，但希望先看品牌对比和家庭空间体验。");
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [uploadedMaterials, setUploadedMaterials] = useState([
@@ -571,7 +587,6 @@ function WorkspacePage() {
   ]);
   const summary = customer.summaryBlock;
   const ownerEvents = customer.events.filter((event) => event.owner === customer.currentOwner);
-  const taskStateOptions: TaskPanelState[] = ["待执行", "执行中", "整理中", "待审批", "已提交"];
   const reviewPacket = {
     rawSummary: "本次执行共采集 2 份材料，确认配偶愿意参与到店体验，核心关注点集中在品牌认知、家庭空间体验和预算上限。",
     interpretation:
@@ -607,119 +622,35 @@ function WorkspacePage() {
     if (taskPanelState === "待执行") {
       return (
         <div style={{ display: "grid", gap: 14 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 14 }} className="task-state-grid">
-            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
-              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>任务标题</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: C.text0, marginBottom: 6 }}>{customer.currentTask.title}</div>
-              <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.65 }}>{customer.currentTask.why}</div>
-            </div>
-            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
-              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>任务元信息</div>
-              <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.75 }}>时间窗口：{customer.currentTask.timeWindow}</div>
-              <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.75 }}>审核级别：{customer.currentTask.reviewState}</div>
-            </div>
-          </div>
-          <div className="task-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 14 }}>
-            <div style={{ background: C.surface, border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "12px 14px" }}>
-              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>建议动作</div>
-              <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{customer.currentTask.recommendedAction}</div>
-            </div>
-            <div style={{ background: C.surface, border: `1px solid ${C.redBorder}`, borderRadius: 10, padding: "12px 14px" }}>
-              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>受限事项</div>
-              {customer.currentTask.blockedActions.map((action) => (
-                <div key={action} style={{ display: "flex", gap: 6, marginBottom: 5 }}>
-                  <span style={{ color: C.red, fontWeight: 700, flexShrink: 0 }}>✕</span>
-                  <span style={{ fontSize: 12, color: C.text1, lineHeight: 1.5 }}>{action}</span>
-                </div>
-              ))}
-            </div>
-            <AgentBlock text={customer.currentTask.agentDraft} label="助手草稿" />
-          </div>
-        </div>
-      );
-    }
-
-    if (taskPanelState === "执行中") {
-      return (
-        <div style={{ display: "grid", gap: 14 }}>
-          <div className="task-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 14 }}>
-            <div style={{ background: C.surface, border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "12px 14px" }}>
-              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>建议动作</div>
-              <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{customer.currentTask.recommendedAction}</div>
-            </div>
-            <div style={{ background: C.surface, border: `1px solid ${C.redBorder}`, borderRadius: 10, padding: "12px 14px" }}>
-              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>受限事项</div>
-              {customer.currentTask.blockedActions.map((action) => (
-                <div key={action} style={{ display: "flex", gap: 6, marginBottom: 5 }}>
-                  <span style={{ color: C.red, fontWeight: 700, flexShrink: 0 }}>✕</span>
-                  <span style={{ fontSize: 12, color: C.text1, lineHeight: 1.5 }}>{action}</span>
-                </div>
-              ))}
-            </div>
-            <AgentBlock text={customer.currentTask.agentDraft} label="助手草稿" />
-          </div>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
-            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>输入用户第一手信息</div>
-            <textarea
-              value={executionInput}
-              onChange={(e) => setExecutionInput(e.target.value)}
-              placeholder="记录刚刚获取到的客户原话、家庭成员反馈、现场观察等……"
-              style={{
-                width: "100%",
-                border: `1.5px solid ${C.border}`,
-                borderRadius: 8,
-                background: C.surfaceAlt,
-                color: C.text0,
-                fontSize: 13,
-                padding: "10px 12px",
-                resize: "vertical",
-                minHeight: 96,
-                outline: "none",
-                fontFamily: C.sans,
-              }}
-            />
+            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>任务标题</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: C.text0, marginBottom: 4 }}>{customer.currentTask.title}</div>
+            <div style={{ fontSize: 12.5, color: C.amber, fontWeight: 600, marginBottom: 8 }}>{customer.currentTask.timeWindow}</div>
+            <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.65 }}>{customer.currentTask.why}</div>
           </div>
-          <div className="task-state-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 14 }}>
-            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
-              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>文件上传入口</div>
-              <label
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  border: `1px dashed ${C.borderMd}`,
-                  borderRadius: 8,
-                  padding: "10px 12px",
-                  fontSize: 13,
-                  color: C.text1,
-                  background: C.surfaceAlt,
-                  cursor: "pointer",
-                  marginBottom: 10,
-                }}
-              >
-                <span>{selectedFiles.length > 0 ? `已选择 ${selectedFiles.length} 个文件` : "选择语音、照片等材料"}</span>
-                <span style={{ color: C.blue, fontWeight: 600 }}>浏览文件</span>
-                <input
-                  type="file"
-                  multiple
-                  style={{ display: "none" }}
-                  onChange={(e) => setSelectedFiles(Array.from(e.target.files ?? []).map((file) => file.name))}
-                />
-              </label>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <SecondaryBtn onClick={uploadMaterials}>一键上传</SecondaryBtn>
-                <span style={{ fontSize: 12, color: C.text2, alignSelf: "center" }}>支持语音、图片、现场备注截图</span>
-              </div>
+          <div className="task-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>建议动作</div>
+              <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{customer.currentTask.recommendedAction}</div>
             </div>
-            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
-              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>已上传材料列表</div>
-              {uploadedMaterials.map((item, index) => (
-                <Row key={`${item.name}-${index}`} last={index === uploadedMaterials.length - 1}>
-                  <Tag label={item.type} variant={item.type === "照片" ? "blue" : "neutral"} small />
-                  <span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{item.name}</span>
-                  <span style={{ fontSize: 11.5, color: C.text2 }}>{item.time}</span>
-                </Row>
+            <div style={{ background: C.surface, border: `1px solid ${C.redBorder}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>受限事项</div>
+              {customer.currentTask.blockedActions.map((action) => (
+                <div key={action} style={{ display: "flex", gap: 6, marginBottom: 5 }}>
+                  <span style={{ color: C.red, fontWeight: 700, flexShrink: 0 }}>✕</span>
+                  <span style={{ fontSize: 12, color: C.text1, lineHeight: 1.5 }}>{action}</span>
+                </div>
               ))}
+            </div>
+            <AgentBlock text={customer.currentTask.agentDraft} label="话术建议" />
+          </div>
+          <div style={{ background: C.surface, border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: "12px 14px", width: "100%" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>信息输入</div>
+            <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.65, marginBottom: 10 }}>记录第一手客户信息、上传材料并提交材料。</div>
+            <div style={{ width: "100%" }}>
+              <SecondaryBtn style={{ width: "100%" }} onClick={() => setInputModalOpen(true)}>
+                提交面客资料
+              </SecondaryBtn>
             </div>
           </div>
         </div>
@@ -830,27 +761,11 @@ function WorkspacePage() {
 
   const renderTaskStateActions = () => {
     if (taskPanelState === "待执行") {
-      return (
-        <>
-          <PrimaryBtn onClick={() => setTaskPanelState("执行中")}>开始执行</PrimaryBtn>
-          <SecondaryBtn>修改计划</SecondaryBtn>
-          <DangerBtn>升级处理</DangerBtn>
-        </>
-      );
-    }
-
-    if (taskPanelState === "执行中") {
-      return (
-        <>
-          <PrimaryBtn onClick={uploadMaterials}>提交材料</PrimaryBtn>
-          <SecondaryBtn>暂存草稿</SecondaryBtn>
-          <SecondaryBtn onClick={() => setTaskPanelState("整理中")}>完成执行，开始整理</SecondaryBtn>
-        </>
-      );
+      return null;
     }
 
     if (taskPanelState === "整理中") {
-      return <SecondaryBtn onClick={() => setTaskPanelState("执行中")}>返回修改</SecondaryBtn>;
+      return <SecondaryBtn onClick={() => setTaskPanelState("待执行")}>返回修改</SecondaryBtn>;
     }
 
     if (taskPanelState === "待审批") {
@@ -858,7 +773,7 @@ function WorkspacePage() {
         <>
           <PrimaryBtn onClick={() => setTaskPanelState("已提交")}>审批并提交事件结果</PrimaryBtn>
           <SecondaryBtn onClick={() => setTaskPanelState("已提交")}>修改后提交</SecondaryBtn>
-          <DangerBtn onClick={() => setTaskPanelState("执行中")}>驳回分析结果</DangerBtn>
+          <DangerBtn onClick={() => setTaskPanelState("待执行")}>驳回分析结果</DangerBtn>
         </>
       );
     }
@@ -879,7 +794,7 @@ function WorkspacePage() {
         <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12 }}>
           当前判断与当前任务
         </div>
-        <div className="top-dual" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
+        <div className="top-dual" style={{ display: "grid", gridTemplateColumns: taskPanelState === "已提交" ? "1fr" : "1fr 2fr", gap: 24, marginBottom: 24 }}>
           <Card style={{ background: C.surfaceAlt }}>
             <CardPad>
               <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12 }}>
@@ -891,8 +806,11 @@ function WorkspacePage() {
                 <span style={{ color: C.text3, margin: "0 8px" }}>｜</span>
                 {summary.customerIdentity.profileLine}
               </div>
-              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px", fontSize: 13.5, color: C.text1, lineHeight: 1.7, marginBottom: 14 }}>
-                {summary.stateSummary}
+              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px", marginBottom: 14 }}>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  核心状态总结
+                </div>
+                <div style={{ fontSize: 13.5, color: C.text1, lineHeight: 1.7 }}>{summary.stateSummary}</div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
                 <div style={{ fontSize: 13, color: C.text1 }}>
@@ -924,6 +842,7 @@ function WorkspacePage() {
             </CardPad>
           </Card>
 
+          {taskPanelState !== "已提交" && (
           <Card style={{ background: "#FFFBF0", borderColor: C.amberBorder }}>
             <CardPad>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 12 }}>
@@ -935,32 +854,14 @@ function WorkspacePage() {
                   </div>
                   <div style={{ fontSize: 12.5, color: C.text2 }}>人机协作任务面板</div>
                 </div>
-                <Tag label={`当前状态：${taskPanelState}`} variant={taskPanelState === "已提交" ? "green" : taskPanelState === "待审批" ? "amber" : taskPanelState === "整理中" ? "blue" : "neutral"} />
+                <Tag label={`当前状态：${taskPanelState}`} variant={taskPanelState === "待审批" ? "amber" : taskPanelState === "整理中" ? "blue" : "neutral"} />
               </div>
-
-              <div style={{ display: "flex", background: C.surface, borderRadius: 10, padding: 4, border: `1px solid ${C.amberBorder}`, marginBottom: 14, overflowX: "auto" }}>
-                {taskStateOptions.map((state) => (
-                  <button
-                    key={state}
-                    onClick={() => setTaskPanelState(state)}
-                    style={{
-                      flex: 1,
-                      minWidth: 92,
-                      padding: "8px 10px",
-                      borderRadius: 8,
-                      background: taskPanelState === state ? "#FFF7E6" : "none",
-                      border: taskPanelState === state ? `1px solid ${C.amberBorder}` : "1px solid transparent",
-                      color: taskPanelState === state ? C.text0 : C.text2,
-                      fontSize: 12.5,
-                      fontWeight: taskPanelState === state ? 600 : 400,
-                      cursor: "pointer",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {state}
-                  </button>
-                ))}
-              </div>
+              {taskPanelState === "待审批" && (
+                <div style={{ background: C.blueLight, border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: "10px 12px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ fontSize: 13, color: C.text1 }}>个人消息已推送“确认客户画像更新”，请在右上角消息中心处理。</div>
+                  <SecondaryBtn onClick={onOpenMessages}>打开消息中心</SecondaryBtn>
+                </div>
+              )}
 
               {renderTaskStateBody()}
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
@@ -968,6 +869,7 @@ function WorkspacePage() {
               </div>
             </CardPad>
           </Card>
+          )}
         </div>
 
         <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12 }}>
@@ -975,7 +877,98 @@ function WorkspacePage() {
         </div>
       </div>
 
-      <div className="two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, maxWidth: 1200, margin: "0 auto 24px", padding: "0 28px" }}>
+      {inputModalOpen && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(26,26,26,0.28)", zIndex: 130, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ width: 760, maxWidth: "100%", maxHeight: "90vh", overflow: "auto", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16 }}>
+            <CardPad>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: C.text0, marginBottom: 4 }}>信息输入</div>
+                  <div style={{ fontSize: 12, color: C.text2 }}>用于录入第一手客户信息并上传执行材料</div>
+                </div>
+                <SecondaryBtn style={{ padding: "6px 10px", fontSize: 12 }} onClick={() => setInputModalOpen(false)}>
+                  关闭
+                </SecondaryBtn>
+              </div>
+
+              <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px", marginBottom: 14 }}>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>输入用户第一手信息</div>
+                <textarea
+                  value={executionInput}
+                  onChange={(e) => setExecutionInput(e.target.value)}
+                  placeholder="记录刚刚获取到的客户原话、家庭成员反馈、现场观察等……"
+                  style={{
+                    width: "100%",
+                    border: `1.5px solid ${C.border}`,
+                    borderRadius: 8,
+                    background: C.surface,
+                    color: C.text0,
+                    fontSize: 13,
+                    padding: "10px 12px",
+                    resize: "vertical",
+                    minHeight: 108,
+                    outline: "none",
+                    fontFamily: C.sans,
+                  }}
+                />
+              </div>
+
+              <div className="task-state-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 14 }}>
+                <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>文件上传入口</div>
+                  <div style={{ fontSize: 13, color: C.text1, marginBottom: 10 }}>选择语音、照片等材料</div>
+                  <label
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      border: `1px dashed ${C.borderMd}`,
+                      borderRadius: 8,
+                      padding: "10px 12px",
+                      fontSize: 13,
+                      color: C.text1,
+                      background: C.surface,
+                      cursor: "pointer",
+                      marginBottom: 10,
+                    }}
+                  >
+                    <span>{selectedFiles.length > 0 ? `已选择 ${selectedFiles.length} 个文件` : "浏览文件"}</span>
+                    <span style={{ color: C.blue, fontWeight: 600 }}>浏览文件</span>
+                    <input
+                      type="file"
+                      multiple
+                      style={{ display: "none" }}
+                      onChange={(e) => setSelectedFiles(Array.from(e.target.files ?? []).map((file) => file.name))}
+                    />
+                  </label>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                    <SecondaryBtn onClick={uploadMaterials}>一键上传</SecondaryBtn>
+                    <span style={{ fontSize: 12, color: C.text2 }}>支持语音、图片、现场备注截图</span>
+                  </div>
+                </div>
+
+                <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>已上传材料列表</div>
+                  {uploadedMaterials.map((item, index) => (
+                    <Row key={`${item.name}-${index}`} last={index === uploadedMaterials.length - 1}>
+                      <Tag label={item.type} variant={item.type === "照片" ? "blue" : "neutral"} small />
+                      <span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{item.name}</span>
+                      <span style={{ fontSize: 11.5, color: C.text2 }}>{item.time}</span>
+                    </Row>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
+                <PrimaryBtn onClick={uploadMaterials}>提交面客资料</PrimaryBtn>
+                <SecondaryBtn onClick={() => setInputModalOpen(false)}>关闭并返回任务面板</SecondaryBtn>
+              </div>
+            </CardPad>
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 1200, margin: "0 auto 24px", padding: "0 28px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase" }}>客户状态详情</div>
 
@@ -989,84 +982,85 @@ function WorkspacePage() {
               <ConfidenceBar value={customer.confidence} />
             </CardPad>
           </Card>
+          <div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <Card>
+              <CardPad style={{ paddingBottom: 4 }}>
+                <SectionTitle>画像概览</SectionTitle>
+                {Object.entries(customer.persona).map(([key, value], index, list) => (
+                  <Row key={key} last={index === list.length - 1}>
+                    <span style={{ fontSize: 12, color: C.text2, minWidth: 100 }}>{key}</span>
+                    <span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{value}</span>
+                  </Row>
+                ))}
+              </CardPad>
+            </Card>
 
-          <Card>
-            <CardPad style={{ paddingBottom: 4 }}>
-              <SectionTitle>画像概览</SectionTitle>
-              {Object.entries(customer.persona).map(([key, value], index, list) => (
-                <Row key={key} last={index === list.length - 1}>
-                  <span style={{ fontSize: 12, color: C.text2, minWidth: 100 }}>{key}</span>
-                  <span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{value}</span>
-                </Row>
-              ))}
-            </CardPad>
-          </Card>
+            <Card>
+              <CardPad style={{ paddingBottom: 4 }}>
+                <SectionTitle>关注重点</SectionTitle>
+                {customer.priorities.map((priority, index) => (
+                  <Row key={priority.item} last={index === customer.priorities.length - 1}>
+                    <span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{priority.item}</span>
+                    <Tag label={priority.weight} variant={priority.weight === "高" ? "blue" : "neutral"} small />
+                    <Tag
+                      label={priority.statusLabel}
+                      variant={priority.status === "verified" ? "green" : priority.status === "concern" ? "amber" : "neutral"}
+                      small
+                    />
+                  </Row>
+                ))}
+              </CardPad>
+            </Card>
 
-          <Card>
-            <CardPad style={{ paddingBottom: 4 }}>
-              <SectionTitle>关注重点</SectionTitle>
-              {customer.priorities.map((priority, index) => (
-                <Row key={priority.item} last={index === customer.priorities.length - 1}>
-                  <span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{priority.item}</span>
-                  <Tag label={priority.weight} variant={priority.weight === "高" ? "blue" : "neutral"} small />
-                  <Tag
-                    label={priority.statusLabel}
-                    variant={priority.status === "verified" ? "green" : priority.status === "concern" ? "amber" : "neutral"}
-                    small
-                  />
-                </Row>
-              ))}
-            </CardPad>
-          </Card>
+            <Card style={{ borderColor: customer.objections.some((item) => !item.resolved && item.severity === "high") ? C.redBorder : C.border }}>
+              <CardPad style={{ paddingBottom: 4 }}>
+                <SectionTitle>顾虑</SectionTitle>
+                {customer.objections.map((objection, index) => (
+                  <Row key={objection.text} last={index === customer.objections.length - 1}>
+                    <div
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        flexShrink: 0,
+                        background: objection.resolved ? C.green : objection.severity === "high" ? C.red : C.amber,
+                      }}
+                    />
+                    <span style={{ fontSize: 13, color: objection.resolved ? C.text2 : C.text0, flex: 1 }}>{objection.text}</span>
+                    {objection.resolved ? (
+                      <StatusPill label="✓ 已解决" variant="green" />
+                    ) : (
+                      <Tag label={objection.severity === "high" ? "高" : objection.severity === "medium" ? "中" : "低"} variant={objection.severity === "high" ? "red" : "amber"} small />
+                    )}
+                  </Row>
+                ))}
+              </CardPad>
+            </Card>
 
-          <Card style={{ borderColor: customer.objections.some((item) => !item.resolved && item.severity === "high") ? C.redBorder : C.border }}>
-            <CardPad style={{ paddingBottom: 4 }}>
-              <SectionTitle>顾虑</SectionTitle>
-              {customer.objections.map((objection, index) => (
-                <Row key={objection.text} last={index === customer.objections.length - 1}>
-                  <div
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: "50%",
-                      flexShrink: 0,
-                      background: objection.resolved ? C.green : objection.severity === "high" ? C.red : C.amber,
-                    }}
-                  />
-                  <span style={{ fontSize: 13, color: objection.resolved ? C.text2 : C.text0, flex: 1 }}>{objection.text}</span>
-                  {objection.resolved ? (
-                    <StatusPill label="✓ 已解决" variant="green" />
-                  ) : (
-                    <Tag label={objection.severity === "high" ? "高" : objection.severity === "medium" ? "中" : "低"} variant={objection.severity === "high" ? "red" : "amber"} small />
-                  )}
-                </Row>
-              ))}
-            </CardPad>
-          </Card>
+            <Card style={{ borderColor: C.amberBorder }}>
+              <CardPad>
+                <SectionTitle>决策张力</SectionTitle>
+                <div style={{ background: C.amberLight, borderLeft: `3px solid ${C.amber}`, borderRadius: 6, padding: "10px 14px", fontSize: 13, color: "#92400E", lineHeight: 1.7 }}>
+                  {customer.decisionTension}
+                </div>
+              </CardPad>
+            </Card>
 
-          <Card style={{ borderColor: C.amberBorder }}>
-            <CardPad>
-              <SectionTitle>决策张力</SectionTitle>
-              <div style={{ background: C.amberLight, borderLeft: `3px solid ${C.amber}`, borderRadius: 6, padding: "10px 14px", fontSize: 13, color: "#92400E", lineHeight: 1.7 }}>
-                {customer.decisionTension}
-              </div>
-            </CardPad>
-          </Card>
-
-          <Card>
-            <CardPad style={{ paddingBottom: 4 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                <SectionTitle>未决问题</SectionTitle>
-                <Tag label={`待解 ${customer.unresolvedQuestions.length} 项`} variant="red" small />
-              </div>
-              {customer.unresolvedQuestions.map((question, index) => (
-                <Row key={question} last={index === customer.unresolvedQuestions.length - 1}>
-                  <span style={{ color: C.red, fontSize: 15, flexShrink: 0, fontWeight: 700 }}>?</span>
-                  <span style={{ fontSize: 13, color: C.text0 }}>{question}</span>
-                </Row>
-              ))}
-            </CardPad>
-          </Card>
+            <Card style={{ gridColumn: "1 / -1" }}>
+              <CardPad style={{ paddingBottom: 4 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <SectionTitle>未决问题</SectionTitle>
+                  <Tag label={`待解 ${customer.unresolvedQuestions.length} 项`} variant="red" small />
+                </div>
+                {customer.unresolvedQuestions.map((question, index) => (
+                  <Row key={question} last={index === customer.unresolvedQuestions.length - 1}>
+                    <span style={{ color: C.red, fontSize: 15, flexShrink: 0, fontWeight: 700 }}>?</span>
+                    <span style={{ fontSize: 13, color: C.text0 }}>{question}</span>
+                  </Row>
+                ))}
+              </CardPad>
+            </Card>
+          </div>
           <Card>
             <CardPad>
               <SectionTitle>最新状态版本摘要</SectionTitle>
@@ -1083,44 +1077,62 @@ function WorkspacePage() {
               </div>
               <div style={{ fontSize: 12, color: C.text2 }}>审批人：{customer.stateVersions[0].approvedBy}</div>
               <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
-                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  状态版本流 / 治理追溯
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {customer.stateVersions.map((version) => (
-                    <div
-                      key={version.version}
-                      style={{
-                        border: `1px solid ${version.level === "重要更新" ? C.amberBorder : C.border}`,
-                        borderLeft: `3px solid ${version.level === "重要更新" ? C.amber : C.borderMd}`,
-                        borderRadius: 8,
-                        padding: "12px 14px",
-                        background: C.surfaceAlt,
-                      }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 8, flexWrap: "wrap" }}>
-                        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text0 }}>{version.version}</span>
-                          <Tag label={version.level} variant={version.level === "重要更新" ? "amber" : "neutral"} small />
+                <button
+                  onClick={() => setVersionTraceExpanded((prev) => !prev)}
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "0",
+                    border: "none",
+                    background: "none",
+                    cursor: "pointer",
+                    textAlign: "left",
+                  }}
+                >
+                  <span style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    状态版本流 / 治理追溯
+                  </span>
+                  <span style={{ fontSize: 12, color: C.text2 }}>{versionTraceExpanded ? "收起" : "展开"}</span>
+                </button>
+                {versionTraceExpanded && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
+                    {customer.stateVersions.map((version) => (
+                      <div
+                        key={version.version}
+                        style={{
+                          border: `1px solid ${version.level === "重要更新" ? C.amberBorder : C.border}`,
+                          borderLeft: `3px solid ${version.level === "重要更新" ? C.amber : C.borderMd}`,
+                          borderRadius: 8,
+                          padding: "12px 14px",
+                          background: C.surfaceAlt,
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 8, flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                            <span style={{ fontSize: 13.5, fontWeight: 700, color: C.text0 }}>{version.version}</span>
+                            <Tag label={version.level} variant={version.level === "重要更新" ? "amber" : "neutral"} small />
+                          </div>
+                          <span style={{ fontSize: 11.5, color: C.text3 }}>{version.date}</span>
                         </div>
-                        <span style={{ fontSize: 11.5, color: C.text3 }}>{version.date}</span>
+                        <div style={{ fontSize: 12, color: C.text2, marginBottom: 8 }}>触发原因：{version.trigger}</div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
+                          {version.changed.map((field) => (
+                            <Tag key={field} label={field} variant="purple" small />
+                          ))}
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: C.text2, marginBottom: version.note ? 8 : 0, gap: 8, flexWrap: "wrap" }}>
+                          <span>
+                            审批人：<strong style={{ color: C.text1 }}>{version.approvedBy}</strong>
+                          </span>
+                          <span>参与助手：{version.agents.join("、")}</span>
+                        </div>
+                        {version.note && <div style={{ background: C.surface, borderRadius: 6, padding: "8px 12px", fontSize: 12, color: C.text1 }}>{version.note}</div>}
                       </div>
-                      <div style={{ fontSize: 12, color: C.text2, marginBottom: 8 }}>触发原因：{version.trigger}</div>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
-                        {version.changed.map((field) => (
-                          <Tag key={field} label={field} variant="purple" small />
-                        ))}
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: C.text2, marginBottom: version.note ? 8 : 0, gap: 8, flexWrap: "wrap" }}>
-                        <span>
-                          审批人：<strong style={{ color: C.text1 }}>{version.approvedBy}</strong>
-                        </span>
-                        <span>参与助手：{version.agents.join("、")}</span>
-                      </div>
-                      {version.note && <div style={{ background: C.surface, borderRadius: 6, padding: "8px 12px", fontSize: 12, color: C.text1 }}>{version.note}</div>}
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardPad>
           </Card>
@@ -1654,6 +1666,21 @@ function CSPage() {
 
 export default function App() {
   const [page, setPage] = useState<PageId>("workspace");
+  const [globalTaskState, setGlobalTaskState] = useState<TaskPanelState>("待执行");
+  const [messagePanelOpen, setMessagePanelOpen] = useState(false);
+  const taskStateOptions: TaskPanelState[] = ["待执行", "整理中", "待审批", "已提交"];
+  const messages =
+    globalTaskState === "待审批"
+      ? [
+          {
+            id: "profile-update",
+            title: profileUpdatePacket.title,
+            subtitle: "客户画像候选更新待你确认",
+            time: "刚刚",
+            unread: true,
+          },
+        ]
+      : [];
   const nav: Array<{ id: PageId; label: string }> = [
     { id: "workspace", label: "客户状态工作台" },
     { id: "sales", label: "销售轻记录" },
@@ -1668,6 +1695,7 @@ export default function App() {
         button:hover { opacity: 0.88; }
         @media (max-width: 980px) {
           .top-dual,
+          .detail-cards-grid,
           .two-col,
           .split-grid,
           .task-state-grid,
@@ -1686,7 +1714,7 @@ export default function App() {
           position: "sticky",
           top: 0,
           zIndex: 100,
-          overflowX: "auto",
+          gap: 12,
         }}
       >
         <div
@@ -1703,31 +1731,187 @@ export default function App() {
         >
           客户旅程<span style={{ color: C.brick }}>·</span>系统
         </div>
-        {nav.map((item) => (
+        <div style={{ display: "flex", alignItems: "center", overflowX: "auto", flex: 1 }}>
+          {nav.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setPage(item.id)}
+              style={{
+                background: "none",
+                border: "none",
+                padding: "15px 18px",
+                cursor: "pointer",
+                fontSize: 13.5,
+                fontWeight: page === item.id ? 600 : 400,
+                color: page === item.id ? C.text0 : C.text2,
+                borderBottom: page === item.id ? `2px solid ${C.brick}` : "2px solid transparent",
+                marginBottom: -1,
+                transition: "color 0.15s",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          <div style={{ display: "flex", background: C.surfaceAlt, borderRadius: 10, padding: 4, border: `1px solid ${C.border}` }}>
+            {taskStateOptions.map((state) => (
+              <button
+                key={state}
+                onClick={() => setGlobalTaskState(state)}
+                style={{
+                  padding: "7px 10px",
+                  borderRadius: 8,
+                  border: "none",
+                  background: globalTaskState === state ? C.surface : "transparent",
+                  color: globalTaskState === state ? C.text0 : C.text2,
+                  fontSize: 12,
+                  fontWeight: globalTaskState === state ? 600 : 400,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {state}
+              </button>
+            ))}
+          </div>
           <button
-            key={item.id}
-            onClick={() => setPage(item.id)}
+            onClick={() => setMessagePanelOpen((prev) => !prev)}
             style={{
-              background: "none",
-              border: "none",
-              padding: "15px 18px",
+              position: "relative",
+              border: `1px solid ${C.border}`,
+              background: C.surface,
+              borderRadius: 999,
+              width: 38,
+              height: 38,
               cursor: "pointer",
-              fontSize: 13.5,
-              fontWeight: page === item.id ? 600 : 400,
-              color: page === item.id ? C.text0 : C.text2,
-              borderBottom: page === item.id ? `2px solid ${C.brick}` : "2px solid transparent",
-              marginBottom: -1,
-              transition: "color 0.15s",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
+              color: C.text1,
+              fontSize: 15,
             }}
           >
-            {item.label}
+            信
+            {messages.length > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: -4,
+                  right: -2,
+                  minWidth: 18,
+                  height: 18,
+                  borderRadius: 9,
+                  background: C.red,
+                  color: "#fff",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0 4px",
+                }}
+              >
+                {messages.length}
+              </span>
+            )}
           </button>
-        ))}
+          <div
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: "50%",
+              background: C.brick,
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 14,
+              fontWeight: 700,
+            }}
+          >
+            王
+          </div>
+        </div>
       </div>
 
-      {page === "workspace" && <WorkspacePage />}
+      {messagePanelOpen && (
+        <div style={{ position: "fixed", top: 66, right: 28, width: 420, maxWidth: "calc(100vw - 32px)", zIndex: 120 }}>
+          <Card style={{ boxShadow: "0 14px 40px rgba(26,26,26,0.12)" }}>
+            <CardPad>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.text0 }}>个人消息</div>
+                  <div style={{ fontSize: 12, color: C.text2 }}>用于处理助手推送与待确认更新</div>
+                </div>
+                <SecondaryBtn style={{ padding: "6px 10px", fontSize: 12 }} onClick={() => setMessagePanelOpen(false)}>
+                  关闭
+                </SecondaryBtn>
+              </div>
+              {messages.length === 0 ? (
+                <div style={{ background: C.surfaceAlt, borderRadius: 10, padding: "14px 16px", fontSize: 13, color: C.text2 }}>
+                  当前没有新的个人消息。
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: 12 }}>
+                  <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 700, color: C.text0 }}>{messages[0].title}</div>
+                      <Tag label="待确认" variant="amber" small />
+                    </div>
+                    <div style={{ fontSize: 12, color: C.text2 }}>{messages[0].subtitle} · {messages[0].time}</div>
+                  </div>
+                  <div style={{ border: `1px solid ${C.greenBorder}`, borderRadius: 10, padding: "12px 14px", background: C.surface }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                      <SectionTitle>{profileUpdatePacket.title}</SectionTitle>
+                      <Tag label={profileUpdatePacket.status} variant="amber" />
+                    </div>
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 7, textTransform: "uppercase", letterSpacing: 0.5 }}>关注重点：新增</div>
+                      {profileUpdatePacket.priorities.map((item) => (
+                        <div key={item} style={{ display: "flex", gap: 8, alignItems: "center", padding: "7px 10px", background: C.greenLight, borderRadius: 7, marginBottom: 5, border: `1px solid ${C.greenBorder}` }}>
+                          <span style={{ color: C.green, fontWeight: 700 }}>+</span>
+                          <span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{item}</span>
+                          <SecondaryBtn style={{ padding: "3px 10px", fontSize: 11 }}>编辑</SecondaryBtn>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 7, textTransform: "uppercase", letterSpacing: 0.5 }}>异议事项：更新</div>
+                      {profileUpdatePacket.objections.map((item) => (
+                        <div key={item} style={{ display: "flex", gap: 8, alignItems: "center", padding: "7px 10px", background: C.greenLight, borderRadius: 7, marginBottom: 5, border: `1px solid ${C.greenBorder}` }}>
+                          <span style={{ color: C.green, fontWeight: 700 }}>+</span>
+                          <span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{item}</span>
+                          <SecondaryBtn style={{ padding: "3px 10px", fontSize: 11 }}>编辑</SecondaryBtn>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 7, textTransform: "uppercase", letterSpacing: 0.5 }}>决策张力：更新</div>
+                      <div style={{ background: C.amberLight, border: `1px solid ${C.amberBorder}`, borderLeft: `3px solid ${C.amber}`, borderRadius: 7, padding: "9px 12px", fontSize: 13, color: "#92400E" }}>
+                        {profileUpdatePacket.tension}
+                      </div>
+                    </div>
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 7, textTransform: "uppercase", letterSpacing: 0.5 }}>证据引用</div>
+                      {profileUpdatePacket.evidence.map((item) => (
+                        <div key={item} style={{ fontSize: 12.5, color: C.text1, padding: "5px 0", borderBottom: `1px solid ${C.border}` }}>
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <PrimaryBtn onClick={() => setGlobalTaskState("已提交")}>确认状态更新</PrimaryBtn>
+                      <SecondaryBtn>修改</SecondaryBtn>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardPad>
+          </Card>
+        </div>
+      )}
+
+      {page === "workspace" && <WorkspacePage taskPanelState={globalTaskState} setTaskPanelState={setGlobalTaskState} onOpenMessages={() => setMessagePanelOpen(true)} />}
       {page === "sales" && <SalesPage />}
       {page === "cs" && <CSPage />}
     </div>
