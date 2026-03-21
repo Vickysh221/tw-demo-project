@@ -67,28 +67,28 @@ type DecisionTensionData = {
 type TaskPanelState = "待执行" | "执行中" | "整理中" | "确认本轮结果" | "已提交";
 
 const C = {
-  bg: "#F7F6F2",
+  bg: "#F6F8FB",
   surface: "#FFFFFF",
-  surfaceAlt: "#F4F3EF",
-  border: "#E8E6E0",
-  borderMd: "#D4D0C8",
-  text0: "#1A1A1A",
-  text1: "#4A4A4A",
-  text2: "#8C8C8C",
-  text3: "#B0ACA4",
-  blue: "#2563EB",
-  blueLight: "#EFF4FF",
-  blueBorder: "#BFD3FD",
-  green: "#16A34A",
-  greenLight: "#F0FDF4",
-  greenBorder: "#BBF7D0",
-  amber: "#D97706",
-  amberLight: "#FFFBEB",
-  amberBorder: "#FDE68A",
-  red: "#DC2626",
-  redLight: "#FEF2F2",
-  redBorder: "#FECACA",
-  brick: "#B91C1C",
+  surfaceAlt: "#F8FAFC",
+  border: "#E6EAF0",
+  borderMd: "#D7DEE8",
+  text0: "#1F2937",
+  text1: "#4B5563",
+  text2: "#8B96A8",
+  text3: "#BEC6D2",
+  blue: "#4F6EF7",
+  blueLight: "#F3F6FF",
+  blueBorder: "#D7DFFF",
+  green: "#5B9A74",
+  greenLight: "#F4FAF6",
+  greenBorder: "#D9EBDC",
+  amber: "#BE8A36",
+  amberLight: "#FCF8EF",
+  amberBorder: "#EEDDB9",
+  red: "#C86D67",
+  redLight: "#FEF7F6",
+  redBorder: "#F0D7D4",
+  brick: "#4F6EF7",
   mono: "'JetBrains Mono', 'IBM Plex Mono', monospace",
   sans: "'Inter', 'DM Sans', system-ui, sans-serif",
 } as const;
@@ -167,10 +167,31 @@ const customer = {
       "当前 owner 仍应由销售主导，客服与售前提供材料支持即可。",
       "下一步更适合推进家庭体验邀约，而不是直接进入成交推进或价格逼单。",
     ],
-    toValidate: [
-      "配偶真实顾虑是否主要来自品牌偏好，而非预算顾虑。",
-      "金融方案能否将月供压到客户可接受区间。",
-      "售后响应承诺是否足以消除服务信任问题。",
+    keyValidationItems: [
+      {
+        priority: "P1",
+        title: "配偶真实顾虑未被直接验证",
+        affects: "关系模式 / 核心 objection",
+        gap: "当前只有刘浩转述，没有配偶本人直接表达，无法确认真实阻力究竟是品牌偏好、预算，还是家庭使用场景。",
+        impact: "当前不宜直接进入成交推进，否则动作会建立在错误阻力判断上。",
+        suggestion: "安排双人体验沟通，直接确认配偶核心顾虑。",
+      },
+      {
+        priority: "P1",
+        title: "金融承受区间未确认",
+        affects: "推荐动作 / 报价策略",
+        gap: "尚未确认客户能够接受的月供区间，也没有完成可行的金融试算对齐。",
+        impact: "报价节奏不能定型，容易提前触发价格防御。",
+        suggestion: "提供金融方案试算，并确认月供接受范围。",
+      },
+      {
+        priority: "P2",
+        title: "售后承诺文件未核实",
+        affects: "服务信任",
+        gap: "当前缺少明确的服务响应凭证或承诺材料，服务信任仍停留在口头层面。",
+        impact: "会削弱服务信任说服力，也无法确认是否适合推进签约相关动作。",
+        suggestion: "补充售后服务响应说明或承诺材料。",
+      },
     ],
     tension: {
       title: "智能体验诉求 vs 家庭品牌与价格顾虑",
@@ -187,23 +208,6 @@ const customer = {
       evidenceEntryLabel: "Based on 3 signals",
       evidence: ["第二次试驾后对辅助驾驶体验满意", "客户明确提到配偶尚未参与决策", "客户持续表达对价格区间的抵触"],
     },
-    evidenceGaps: [
-      {
-        gap: "配偶真实顾虑未被直接验证",
-        affects: "关系模式和 objection 判断",
-        impact: "当前不宜直接进入成交推进，否则动作会建立在错误阻力判断上。",
-      },
-      {
-        gap: "金融承受区间未确认",
-        affects: "推荐动作与报价策略",
-        impact: "当前报价节奏不能定型，容易提前触发价格防御。",
-      },
-      {
-        gap: "售后承诺文件未核实",
-        affects: "服务信任判断",
-        impact: "售后 objection 仍未闭环，无法确认是否适合推进签约相关动作。",
-      },
-    ],
   },
   unresolvedQuestions: [
     "配偶的具体顾虑是否被直接倾听过？",
@@ -739,7 +743,7 @@ function Tag({ label, variant = "neutral", small = false }: TagProps) {
     red: { color: C.red, bg: C.redLight, border: C.redBorder },
     blue: { color: C.blue, bg: C.blueLight, border: C.blueBorder },
     neutral: { color: C.text1, bg: C.surfaceAlt, border: C.border },
-    purple: { color: "#6D28D9", bg: "#F5F3FF", border: "#DDD6FE" },
+    purple: { color: "#667085", bg: "#F7F8FB", border: "#E4E7EC" },
   };
   const s = styles[variant];
 
@@ -748,13 +752,13 @@ function Tag({ label, variant = "neutral", small = false }: TagProps) {
       style={{
         display: "inline-flex",
         alignItems: "center",
-        padding: small ? "1px 7px" : "2px 9px",
-        borderRadius: 5,
+        padding: small ? "2px 8px" : "4px 10px",
+        borderRadius: 999,
         border: `1px solid ${s.border}`,
         background: s.bg,
         color: s.color,
         fontSize: small ? 10.5 : 11.5,
-        fontWeight: 500,
+        fontWeight: 600,
         whiteSpace: "nowrap",
       }}
     >
@@ -782,15 +786,15 @@ function SectionTitle({ children }: SectionTitleProps) {
 
 function Row({ children, last = false, style = {} }: RowProps) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        padding: "11px 0",
-        borderBottom: last ? "none" : `1px solid ${C.border}`,
-        ...style,
-      }}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "12px 0",
+          borderBottom: last ? "none" : `1px solid ${C.border}`,
+          ...style,
+        }}
     >
       {children}
     </div>
@@ -803,8 +807,9 @@ function Card({ children, style = {}, noPad = false }: CardProps) {
       style={{
         background: C.surface,
         border: `1px solid ${C.border}`,
-        borderRadius: 14,
+        borderRadius: 12,
         overflow: "hidden",
+        boxShadow: "0 1px 2px rgba(16,24,40,0.04)",
         ...(noPad ? {} : {}),
         ...style,
       }}
@@ -845,10 +850,10 @@ function AgentBlock({ text, label = "助手草稿" }: { text: string; label?: st
   return (
     <div
       style={{
-        background: "#F5F3FF",
-        border: "1px solid #DDD6FE",
-        borderLeft: "3px solid #7C3AED",
-        borderRadius: 8,
+        background: C.blueLight,
+        border: `1px solid ${C.blueBorder}`,
+        borderLeft: `3px solid ${C.blue}`,
+        borderRadius: 10,
         padding: "11px 14px",
       }}
     >
@@ -856,7 +861,7 @@ function AgentBlock({ text, label = "助手草稿" }: { text: string; label?: st
         style={{
           fontSize: 10.5,
           fontWeight: 600,
-          color: "#6D28D9",
+          color: C.blue,
           marginBottom: 6,
           letterSpacing: 0.5,
           textTransform: "uppercase",
@@ -864,7 +869,7 @@ function AgentBlock({ text, label = "助手草稿" }: { text: string; label?: st
       >
         {label}
       </div>
-      <div style={{ fontSize: 13, color: "#4C1D95", lineHeight: 1.7, fontStyle: "italic" }}>{text}</div>
+      <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>{text}</div>
     </div>
   );
 }
@@ -952,7 +957,7 @@ function DecisionTensionCard({
               gap: 4,
             }}
           >
-            <div style={{ width: 14, height: 14, borderRadius: 999, background: C.amber, boxShadow: `0 0 0 4px ${C.amberLight}` }} />
+            <div style={{ width: 14, height: 14, borderRadius: 999, background: C.amber, boxShadow: `0 0 0 3px ${C.amberLight}` }} />
             <div style={{ fontSize: 11, color: "#92400E", fontWeight: 600 }}>当前偏向</div>
           </div>
         </div>
@@ -1035,10 +1040,10 @@ function PrimaryBtn({ children, onClick, style = {} }: ButtonProps) {
     <button
       onClick={onClick}
       style={{
-        background: C.brick,
+        background: C.blue,
         color: "#fff",
-        border: "none",
-        borderRadius: 8,
+        border: `1px solid ${C.blue}`,
+        borderRadius: 10,
         padding: "9px 18px",
         fontSize: 13,
         fontWeight: 600,
@@ -1058,11 +1063,32 @@ function SecondaryBtn({ children, onClick, style = {} }: ButtonProps) {
       style={{
         background: C.surface,
         color: C.text1,
-        border: `1.5px solid ${C.border}`,
-        borderRadius: 8,
+        border: `1px solid ${C.border}`,
+        borderRadius: 10,
         padding: "8px 16px",
         fontSize: 13,
-        fontWeight: 500,
+        fontWeight: 600,
+        cursor: "pointer",
+        ...style,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function GhostBtn({ children, onClick, style = {} }: ButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: "transparent",
+        color: C.blue,
+        border: "none",
+        borderRadius: 8,
+        padding: "6px 0",
+        fontSize: 13,
+        fontWeight: 600,
         cursor: "pointer",
         ...style,
       }}
@@ -1079,11 +1105,11 @@ function DangerBtn({ children, onClick, style = {} }: ButtonProps) {
       style={{
         background: C.redLight,
         color: C.red,
-        border: `1.5px solid ${C.redBorder}`,
-        borderRadius: 8,
+        border: `1px solid ${C.redBorder}`,
+        borderRadius: 10,
         padding: "8px 14px",
         fontSize: 13,
-        fontWeight: 500,
+        fontWeight: 600,
         cursor: "pointer",
         ...style,
       }}
@@ -1116,25 +1142,15 @@ function getAlertVariant(type: string): TagVariant {
 
 function SummaryStat({ label, value, variant }: { label: string; value: number; variant: TagVariant }) {
   return (
-    <div style={{ padding: "14px 16px", borderRight: `1px solid ${C.border}`, minWidth: 0 }}>
-      <div style={{ fontSize: 12, color: C.text2, marginBottom: 8 }}>{label}</div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-        <span style={{ fontSize: 30, fontWeight: 700, color: C.text0, lineHeight: 1 }}>{value}</span>
+    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "18px 18px", minWidth: 0 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 14 }}>
+        <div style={{ fontSize: 13.5, color: C.text1, letterSpacing: 0.2 }}>{label}</div>
         <Tag label={label} variant={variant} small />
       </div>
-    </div>
-  );
-}
-
-function GovernanceSummaryStat({ label, value, note }: { label: string; value: number; note: string }) {
-  return (
-    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px" }}>
-      <div style={{ fontSize: 11, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.6 }}>{label}</div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 8 }}>
-        <span style={{ fontSize: 28, fontWeight: 700, color: C.text0, lineHeight: 1 }}>{value}</span>
-        <span style={{ fontSize: 12, color: C.text2 }}>条</span>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+        <span style={{ fontSize: 34, fontWeight: 700, color: C.text0, lineHeight: 1 }}>{value}</span>
+        <span style={{ fontSize: 13, color: C.text2 }}>项</span>
       </div>
-      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.6 }}>{note}</div>
     </div>
   );
 }
@@ -1159,159 +1175,109 @@ function GovernanceToggle({ enabled }: { enabled: boolean }) {
   );
 }
 
-function DimensionRuleRow({ item, last = false }: { item: (typeof stateGovernanceWorkbench.stateDimensions)[number]; last?: boolean }) {
+function AgentDirectoryCard({
+  agent,
+  active = false,
+  onOpen,
+}: {
+  agent: {
+    englishName: string;
+    chineseName: string;
+    subtitle: string;
+    responsibility: string;
+    statusSummary: string;
+  };
+  active?: boolean;
+  onOpen: () => void;
+}) {
   return (
-    <div
-      className="governance-row-grid"
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1.2fr 2fr 0.9fr 0.9fr 0.9fr 1.4fr auto",
-        gap: 14,
-        alignItems: "start",
-        padding: "14px 0",
-        borderBottom: last ? "none" : `1px solid ${C.border}`,
-      }}
-    >
-      <div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: C.text0, marginBottom: 4 }}>{item.name}</div>
-        <div style={{ fontSize: 11.5, color: C.text2 }}>{item.code}</div>
+    <Card style={{ borderColor: active ? C.blueBorder : C.border, background: active ? C.blueLight : C.surface }}>
+      <CardPad>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 14, marginBottom: 12 }}>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: C.text0, marginBottom: 6 }}>{agent.englishName}</div>
+            <div style={{ fontSize: 14, color: C.text1, fontWeight: 600 }}>{agent.chineseName}</div>
+          </div>
+        </div>
+        <div style={{ fontSize: 13.5, color: C.text2, marginBottom: 8 }}>{agent.subtitle}</div>
+        <div style={{ fontSize: 14, color: C.text1, lineHeight: 1.75, marginBottom: 14 }}>{agent.responsibility}</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {agent.statusSummary.split("｜").map((item) => (
+              <Tag
+                key={item}
+                label={item}
+                variant={item.includes("待发布") ? "amber" : item.includes("需") ? "blue" : "neutral"}
+                small
+              />
+            ))}
+          </div>
+          <SecondaryBtn onClick={onOpen} style={{ padding: "8px 12px", fontSize: 12 }}>
+            查看/管理规则
+          </SecondaryBtn>
+        </div>
+      </CardPad>
+    </Card>
+  );
+}
+
+function GovernanceRuleTable({
+  columns,
+  rows,
+  columnTemplate,
+}: {
+  columns: string[];
+  rows: Array<{ key: string; cells: ReactNode[] }>;
+  columnTemplate: string;
+}) {
+  return (
+    <div style={{ border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", background: C.surface }}>
+      <div className="governance-rule-grid" style={{ display: "grid", gridTemplateColumns: columnTemplate, gap: 14, padding: "12px 16px", background: C.surfaceAlt, borderBottom: `1px solid ${C.border}` }}>
+        {columns.map((column) => (
+          <div key={column} style={{ fontSize: 12, color: C.text2, fontWeight: 600, letterSpacing: 0.2 }}>
+            {column}
+          </div>
+        ))}
       </div>
-      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item.description}</div>
-      <div>
-        <div style={{ fontSize: 11, color: C.text2, marginBottom: 6 }}>版本沉淀</div>
-        <GovernanceToggle enabled={item.versioned} />
-      </div>
-      <div>
-        <div style={{ fontSize: 11, color: C.text2, marginBottom: 6 }}>首屏显示</div>
-        <GovernanceToggle enabled={item.visibleOnTop} />
-      </div>
-      <div>
-        <div style={{ fontSize: 11, color: C.text2, marginBottom: 6 }}>角色共享</div>
-        <GovernanceToggle enabled={item.sharedAcrossRoles} />
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {item.pages.map((page) => (
-            <Tag key={page} label={page} variant="neutral" small />
+      {rows.map((row, index) => (
+        <div
+          key={row.key}
+          className="governance-rule-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: columnTemplate,
+            gap: 14,
+            padding: "14px 16px",
+            alignItems: "start",
+            borderBottom: index === rows.length - 1 ? "none" : `1px solid ${C.border}`,
+          }}
+        >
+          {row.cells.map((cell, cellIndex) => (
+            <div key={`${row.key}-${cellIndex}`} style={{ minWidth: 0 }}>
+              {cell}
+            </div>
           ))}
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {item.roles.map((role) => (
-            <Tag key={role} label={role} variant="blue" small />
-          ))}
-        </div>
-      </div>
-      <div style={{ justifySelf: "end" }}>
-        <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>编辑</SecondaryBtn>
-      </div>
+      ))}
     </div>
   );
 }
 
-function ModuleConfigRow({
+function GovernanceChangeRow({
   item,
   last = false,
 }: {
   item: {
-    name: string;
-    firstScreen: boolean;
-    collapsible: boolean;
-    order: number;
-    note: string;
+    changedBy: string;
+    change: string;
+    effectiveAt: string;
+    impact: string;
+    roleImpact: string;
+    agentImpact: string;
+    status: string;
   };
   last?: boolean;
 }) {
-  return (
-    <div
-      className="governance-row-grid"
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1.2fr 0.7fr 0.8fr 0.8fr 2fr auto",
-        gap: 12,
-        alignItems: "center",
-        padding: "12px 0",
-        borderBottom: last ? "none" : `1px solid ${C.border}`,
-      }}
-    >
-      <div style={{ fontSize: 13.5, color: C.text0, fontWeight: 600 }}>{item.name}</div>
-      <div style={{ fontSize: 12.5, color: C.text1 }}>#{item.order}</div>
-      <div><GovernanceToggle enabled={item.firstScreen} /></div>
-      <div><GovernanceToggle enabled={item.collapsible} /></div>
-      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item.note}</div>
-      <div style={{ justifySelf: "end" }}>
-        <SecondaryBtn style={{ padding: "6px 10px", fontSize: 12 }}>调整</SecondaryBtn>
-      </div>
-    </div>
-  );
-}
-
-function AgentRuleRow({ item, last = false }: { item: (typeof stateGovernanceWorkbench.agentRules)[number]; last?: boolean }) {
-  return (
-    <div
-      className="governance-row-grid"
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1.6fr 0.8fr 0.8fr 0.8fr 1.5fr auto",
-        gap: 14,
-        alignItems: "start",
-        padding: "14px 0",
-        borderBottom: last ? "none" : `1px solid ${C.border}`,
-      }}
-    >
-      <div style={{ fontSize: 14, color: C.text0, fontWeight: 700 }}>{item.agent}</div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-        {item.outputs.map((output) => (
-          <Tag key={output} label={output} variant="purple" small />
-        ))}
-      </div>
-      <div>
-        <div style={{ fontSize: 11, color: C.text2, marginBottom: 6 }}>owner 审批</div>
-        <GovernanceToggle enabled={item.approvalRequired} />
-      </div>
-      <div>
-        <div style={{ fontSize: 11, color: C.text2, marginBottom: 6 }}>经理复核</div>
-        <GovernanceToggle enabled={item.managerReviewRequired} />
-      </div>
-      <div>
-        <div style={{ fontSize: 11, color: C.text2, marginBottom: 6 }}>直接写入</div>
-        <GovernanceToggle enabled={item.directWriteAllowed} />
-      </div>
-      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item.writeBoundary}</div>
-      <div style={{ justifySelf: "end" }}>
-        <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>查看边界</SecondaryBtn>
-      </div>
-    </div>
-  );
-}
-
-function OwnershipRuleRow({ item, last = false }: { item: (typeof stateGovernanceWorkbench.ownershipRules)[number]; last?: boolean }) {
-  return (
-    <div
-      className="governance-row-grid"
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1.5fr 1.8fr 0.9fr 1fr auto",
-        gap: 14,
-        alignItems: "start",
-        padding: "14px 0",
-        borderBottom: last ? "none" : `1px solid ${C.border}`,
-      }}
-    >
-      <div style={{ fontSize: 14, color: C.text0, fontWeight: 700 }}>{item.scenario}</div>
-      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item.rule}</div>
-      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item.trigger}</div>
-      <div>
-        <Tag label={item.mode} variant={item.mode.includes("自动") ? "green" : item.mode.includes("禁止") ? "red" : "amber"} small />
-      </div>
-      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item.review}</div>
-      <div style={{ justifySelf: "end" }}>
-        <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>查看流转</SecondaryBtn>
-      </div>
-    </div>
-  );
-}
-
-function GovernanceChangeRow({ item, last = false }: { item: (typeof stateGovernanceWorkbench.changeLog)[number]; last?: boolean }) {
   return (
     <div
       className="governance-row-grid"
@@ -1379,21 +1345,21 @@ function WorkItemRow({
     >
       <div style={{ minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: C.text0 }}>{item.customerName}</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: C.text0, letterSpacing: 0.1 }}>{item.customerName}</span>
           <Tag label={item.stage} variant="neutral" small />
         </div>
-        <div style={{ fontSize: 12.5, color: C.text2, lineHeight: 1.6 }}>{item.ownerReason}</div>
+        <div style={{ fontSize: 13.5, color: C.text2, lineHeight: 1.75, letterSpacing: 0.1 }}>{item.ownerReason}</div>
       </div>
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 14, color: C.text0, fontWeight: 600, marginBottom: 4 }}>{item.taskTitle}</div>
-        <div style={{ fontSize: 12.5, color: C.text2 }}>当前阶段：{item.stage}</div>
+        <div style={{ fontSize: 15, color: C.text0, fontWeight: 600, marginBottom: 5, letterSpacing: 0.1 }}>{item.taskTitle}</div>
+        <div style={{ fontSize: 13.5, color: C.text2 }}>当前阶段：{item.stage}</div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
         <StatusPill label={item.status} variant={getTaskStatusVariant(item.status)} />
         <Tag label={item.risk} variant={getRiskVariant(item.risk)} small />
       </div>
-      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.6 }}>
-        <div style={{ fontSize: 11, color: C.text2, marginBottom: 4 }}>截止时间 / 时间窗口</div>
+      <div style={{ fontSize: 13.5, color: C.text1, lineHeight: 1.7 }}>
+        <div style={{ fontSize: 12, color: C.text2, marginBottom: 5 }}>截止时间 / 时间窗口</div>
         <div>{item.dueTime}</div>
       </div>
       <div style={{ justifySelf: "end" }}>
@@ -1427,15 +1393,15 @@ function ApprovalItemRow({
       }}
     >
       <div>
-        <div style={{ fontSize: 15, fontWeight: 700, color: C.text0, marginBottom: 6 }}>{item.customerName}</div>
-        <div style={{ fontSize: 12.5, color: C.text2 }}>提交来源：{item.source}</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: C.text0, marginBottom: 6, letterSpacing: 0.1 }}>{item.customerName}</div>
+        <div style={{ fontSize: 13.5, color: C.text2 }}>提交来源：{item.source}</div>
       </div>
-      <div style={{ fontSize: 13, color: C.text0 }}>{item.type}</div>
+      <div style={{ fontSize: 14.5, color: C.text0 }}>{item.type}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
         <StatusPill label={item.status} variant={item.status.includes("审批") ? "amber" : "blue"} />
-        <span style={{ fontSize: 12, color: C.text2 }}>提交时间：{item.submittedAt}</span>
+        <span style={{ fontSize: 13, color: C.text2 }}>提交时间：{item.submittedAt}</span>
       </div>
-      <div style={{ fontSize: 12.5, color: C.text1 }}>当前等待你处理</div>
+      <div style={{ fontSize: 13.5, color: C.text1 }}>当前等待你处理</div>
       <div style={{ display: "flex", gap: 8, justifySelf: "end", flexWrap: "wrap", justifyContent: "flex-end" }}>
         <SecondaryBtn onClick={onOpenWorkspace} style={{ padding: "7px 12px" }}>
           查看
@@ -1461,10 +1427,10 @@ function AlertItemRow({ item, last = false }: { item: (typeof myWorkbench.alerts
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 14, fontWeight: 700, color: C.text0 }}>{item.customerName}</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: C.text0, letterSpacing: 0.1 }}>{item.customerName}</span>
         <Tag label={item.type} variant={getAlertVariant(item.type)} small />
       </div>
-      <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.75 }}>{item.message}</div>
+      <div style={{ fontSize: 14, color: C.text1, lineHeight: 1.8, letterSpacing: 0.1 }}>{item.message}</div>
     </div>
   );
 }
@@ -1495,14 +1461,14 @@ function MyWorkbenchPage({ onOpenWorkspace }: { onOpenWorkspace: () => void }) {
   return (
     <div>
       <Header page="myWorkbench" />
-      <div style={{ maxWidth: 1240, margin: "24px auto 40px", padding: "0 28px", display: "grid", gap: 22 }}>
+      <div style={{ maxWidth: 1240, margin: "24px auto 40px", padding: "0 28px", display: "grid", gap: 24 }}>
         <Card>
-          <CardPad style={{ paddingBottom: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 18 }}>
+          <CardPad style={{ paddingBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 20 }}>
               <div>
                 <SectionTitle>今日待处理总览</SectionTitle>
-                <div style={{ fontSize: 24, fontWeight: 700, color: C.text0, marginBottom: 6 }}>我的工作台</div>
-                <div style={{ fontSize: 13, color: C.text2, lineHeight: 1.7 }}>
+                <div style={{ fontSize: 28, fontWeight: 700, color: C.text0, marginBottom: 8, letterSpacing: 0.2 }}>我的工作台</div>
+                <div style={{ fontSize: 14.5, color: C.text2, lineHeight: 1.75, letterSpacing: 0.1 }}>
                   优先查看当前待执行事项、待审批输出，以及因路由变更需要你立即接手的客户。
                 </div>
               </div>
@@ -1511,7 +1477,7 @@ function MyWorkbenchPage({ onOpenWorkspace }: { onOpenWorkspace: () => void }) {
                 <Tag label="业务 owner 工作总览" variant="neutral" small />
               </div>
             </div>
-            <div className="workbench-summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
+            <div className="workbench-summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 12 }}>
               <SummaryStat label="待执行" value={myWorkbench.summary.todoCount} variant="neutral" />
               <SummaryStat label="执行中" value={myWorkbench.summary.inProgressCount} variant="blue" />
               <SummaryStat label="待审批" value={myWorkbench.summary.pendingApprovalCount} variant="amber" />
@@ -1594,14 +1560,15 @@ function Header({ page }: HeaderProps) {
     workspace: "客户状态工作台",
     sales: "销售轻记录",
     cs: "客服触达检查",
-    governance: "状态治理台",
+    governance: "智能体后台管理",
   };
   const summary = customer.summaryBlock;
 
   if (page === "workspace" || page === "myWorkbench" || page === "governance") {
     return (
       <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: "14px 28px" }}>
-        <div style={{ fontSize: 11.5, color: C.text2 }}>{pageTitles[page]}</div>
+        <div style={{ fontSize: 11.5, color: C.text2, marginBottom: 4 }}>页面</div>
+        <div style={{ fontSize: 24, fontWeight: 700, color: C.text0, letterSpacing: 0.2 }}>{pageTitles[page]}</div>
       </div>
     );
   }
@@ -1814,7 +1781,7 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
           <div style={{ display: "grid", gap: 12, background: "#F5F8FF", border: `1px solid ${C.blueBorder}`, borderRadius: 14, padding: 12 }}>
             <div style={{ background: "#EAF1FF", border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ width: 8, height: 8, borderRadius: 999, background: C.blue, boxShadow: `0 0 0 4px rgba(37,99,235,0.12)` }} />
+                <span style={{ width: 8, height: 8, borderRadius: 999, background: C.blue, boxShadow: `0 0 0 3px ${C.blueLight}` }} />
                 <span style={{ fontSize: 13, fontWeight: 700, color: C.blue }}>助手实时整理中...</span>
               </div>
               <div style={{ fontSize: 12, color: C.text1 }}>边执行，边整理，边更新理解</div>
@@ -2100,8 +2067,8 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
 
     return (
       <>
-        <SecondaryBtn onClick={() => setWorkTab("history")}>查看任务历史</SecondaryBtn>
-        <SecondaryBtn onClick={() => setWorkTab("history")}>查看状态更新结果</SecondaryBtn>
+        <GhostBtn onClick={() => setWorkTab("history")}>查看任务历史</GhostBtn>
+        <GhostBtn onClick={() => setWorkTab("history")}>查看状态更新结果</GhostBtn>
         <PrimaryBtn onClick={() => setTaskPanelState("待执行")}>返回工作台</PrimaryBtn>
       </>
     );
@@ -2111,8 +2078,8 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
     <div>
       <Header page="workspace" />
       <div style={{ margin: "24px 0", padding: "0 28px" }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12 }}>
-          当前判断与当前任务
+        <div style={{ fontSize: 12, fontWeight: 600, color: C.text2, letterSpacing: 0.9, textTransform: "uppercase", marginBottom: 12 }}>
+          Layer 2 · 顶部摘要层
         </div>
         <div className="top-dual" style={{ display: "grid", gridTemplateColumns: taskPanelState === "已提交" ? "1fr" : "1fr 2fr", gap: 24, marginBottom: 24 }}>
           <Card style={{ background: C.surfaceAlt }}>
@@ -2142,28 +2109,15 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
                 <div style={{ fontSize: 13, color: C.text1 }}>
                   当前审核：<strong style={{ color: C.text0 }}>{summary.workflow.reviewStatus}</strong>
                 </div>
-                <button
-                  onClick={() => setWorkTab("assignment")}
-                  style={{
-                    marginTop: 2,
-                    padding: 0,
-                    border: "none",
-                    background: "none",
-                    color: C.blue,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    textAlign: "left",
-                    cursor: "pointer",
-                  }}
-                >
-                  查看责任协同详情 &gt;
-                </button>
+                <GhostBtn onClick={() => setWorkTab("assignment")} style={{ marginTop: 2, textAlign: "left", justifyContent: "flex-start" }}>
+                  查看责任协同详情
+                </GhostBtn>
               </div>
             </CardPad>
           </Card>
 
           {taskPanelState !== "已提交" && (
-          <Card style={{ background: "#FFFBF0", borderColor: C.amberBorder }}>
+          <Card style={{ background: C.surface, borderColor: C.border }}>
             <CardPad>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 12 }}>
                 <div>
@@ -2195,8 +2149,8 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
           )}
         </div>
 
-        <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12 }}>
-          详细信息层
+        <div style={{ fontSize: 12, fontWeight: 600, color: C.text2, letterSpacing: 0.9, textTransform: "uppercase", marginBottom: 12 }}>
+          Layer 3 · 主体工作层
         </div>
       </div>
 
@@ -2293,7 +2247,7 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
 
       <div style={{ display: "flex", flexDirection: "column", gap: 24, margin: "0 0 24px", padding: "0 28px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase" }}>客户状态详情</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: C.text2, letterSpacing: 0.9, textTransform: "uppercase" }}>客户状态详情</div>
 
           <Card>
             <CardPad>
@@ -2304,60 +2258,104 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
                   <Tag label={`更新时间：${stateDetail.summary.updatedAt}`} variant="neutral" small />
                 </div>
               </div>
-              <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
-                <div style={{ fontSize: 12, color: C.text2, marginBottom: 6 }}>当前摘要</div>
-                <div style={{ fontSize: 13.5, color: C.text0, lineHeight: 1.75 }}>{stateDetail.summary.summaryText}</div>
+              <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 13, color: C.text2, marginBottom: 8, letterSpacing: 0.2 }}>当前摘要</div>
+                <div style={{ fontSize: 15, color: C.text0, lineHeight: 1.85, letterSpacing: 0.1 }}>{stateDetail.summary.summaryText}</div>
               </div>
             </CardPad>
           </Card>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <Card>
-              <CardPad style={{ paddingBottom: 4 }}>
+              <CardPad>
                 <SectionTitle>判断相关特征</SectionTitle>
-                {stateDetail.decisionRelevantTraits.map((trait, index) => (
-                  <Row key={trait.label} last={index === stateDetail.decisionRelevantTraits.length - 1} style={{ alignItems: "flex-start" }}>
-                    <div style={{ minWidth: 110, paddingTop: 2 }}>
-                      <div style={{ fontSize: 12, color: C.text2, marginBottom: 5 }}>{trait.label}</div>
-                      <div style={{ fontSize: 13, color: C.text0, fontWeight: 600, lineHeight: 1.6 }}>{trait.value}</div>
-                    </div>
-                    <div style={{ flex: 1, background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 12px" }}>
-                      <div style={{ fontSize: 11, color: C.text2, marginBottom: 4 }}>对当前判断的影响</div>
-                      <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>{trait.impact}</div>
-                    </div>
-                  </Row>
-                ))}
+                <div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                  {stateDetail.decisionRelevantTraits.map((trait, index) => {
+                    const tone =
+                      index % 4 === 0
+                        ? { bg: C.redLight, border: C.redBorder, tag: "P0", tagColor: C.red, tagBg: "#FFF1F0" }
+                        : index % 4 === 1
+                          ? { bg: C.amberLight, border: C.amberBorder, tag: "P1", tagColor: C.amber, tagBg: "#FFF7ED" }
+                          : index % 4 === 2
+                            ? { bg: C.blueLight, border: C.blueBorder, tag: "P2", tagColor: C.blue, tagBg: "#EEF4FF" }
+                            : { bg: C.greenLight, border: C.greenBorder, tag: "P3", tagColor: C.green, tagBg: "#F2FAF5" };
+
+                    return (
+                      <div
+                        key={trait.label}
+                        style={{
+                          background: C.surface,
+                          border: `1px solid ${C.border}`,
+                          borderLeft: `3px solid ${tone.tagColor}`,
+                          borderRadius: 12,
+                          padding: "14px 16px 16px",
+                          minHeight: 224,
+                          display: "flex",
+                          flexDirection: "column",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 22 }}>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              minWidth: 40,
+                              height: 30,
+                              padding: "0 10px",
+                              border: `1px solid ${tone.border}`,
+                              background: tone.tagBg,
+                              color: tone.tagColor,
+                              borderRadius: 0,
+                              fontSize: 13,
+                              fontWeight: 500,
+                            }}
+                          >
+                            {tone.tag}
+                          </span>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              minHeight: 30,
+                              padding: "0 12px",
+                              border: `1px solid ${C.border}`,
+                              background: C.surfaceAlt,
+                              color: C.text1,
+                              fontSize: 15,
+                              fontWeight: 600,
+                            }}
+                          >
+                            {trait.label}
+                          </span>
+                        </div>
+
+                        <div style={{ fontSize: 28, fontWeight: 500, color: "#111827", lineHeight: 1.28, letterSpacing: 0.2, marginBottom: 28 }}>{trait.value}</div>
+
+                        <div style={{ marginTop: "auto" }}>
+                          <div style={{ fontSize: 13, color: C.text2, marginBottom: 8, fontWeight: 600, letterSpacing: 0.1 }}>对当前判断的影响</div>
+                          <div style={{ fontSize: 14.5, color: C.text1, lineHeight: 1.8, letterSpacing: 0.1 }}>{trait.impact}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </CardPad>
             </Card>
 
             <Card>
               <CardPad style={{ paddingBottom: 4 }}>
-                <div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                  <div style={{ border: `1px solid ${C.greenBorder}`, borderRadius: 10, overflow: "hidden" }}>
-                    <div style={{ padding: "10px 12px", background: C.greenLight, borderBottom: `1px solid ${C.greenBorder}`, fontSize: 12, fontWeight: 700, color: C.green }}>
-                      可行动
-                    </div>
-                    <div style={{ padding: "0 12px" }}>
-                      {stateDetail.actionable.map((item, index) => (
-                        <Row key={item} last={index === stateDetail.actionable.length - 1}>
-                          <span style={{ color: C.green, fontWeight: 700, fontSize: 14 }}>✓</span>
-                          <span style={{ fontSize: 13, color: C.text0, lineHeight: 1.7 }}>{item}</span>
-                        </Row>
-                      ))}
-                    </div>
+                <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
+                  <div style={{ padding: "12px 14px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text0, letterSpacing: 0.1 }}>可行动</div>
+                    <Tag label={`${stateDetail.actionable.length} 条`} variant="green" small />
                   </div>
-
-                  <div style={{ border: `1px solid ${C.amberBorder}`, borderRadius: 10, overflow: "hidden" }}>
-                    <div style={{ padding: "10px 12px", background: C.amberLight, borderBottom: `1px solid ${C.amberBorder}`, fontSize: 12, fontWeight: 700, color: C.amber }}>
-                      待验证
-                    </div>
-                    <div style={{ padding: "0 12px" }}>
-                      {stateDetail.toValidate.map((item, index) => (
-                        <Row key={item} last={index === stateDetail.toValidate.length - 1}>
-                          <span style={{ color: C.amber, fontWeight: 700, fontSize: 14 }}>?</span>
-                          <span style={{ fontSize: 13, color: C.text0, lineHeight: 1.7 }}>{item}</span>
-                        </Row>
-                      ))}
-                    </div>
+                  <div style={{ padding: "0 14px" }}>
+                    {stateDetail.actionable.map((item, index) => (
+                      <Row key={item} last={index === stateDetail.actionable.length - 1} style={{ alignItems: "flex-start", padding: "13px 0" }}>
+                        <span style={{ color: C.green, fontWeight: 700, fontSize: 14 }}>•</span>
+                        <span style={{ fontSize: 14, color: C.text0, lineHeight: 1.8, letterSpacing: 0.1 }}>{item}</span>
+                      </Row>
+                    ))}
                   </div>
                 </div>
               </CardPad>
@@ -2371,32 +2369,80 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
             </Card>
 
             <Card style={{ gridColumn: "1 / -1" }}>
-              <CardPad style={{ paddingBottom: 4 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <SectionTitle>待补证据 / 不确定性来源</SectionTitle>
-                  <Tag label={`当前 ${stateDetail.evidenceGaps.length} 项`} variant="red" small />
+              <CardPad>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                  <SectionTitle>关键待验证项</SectionTitle>
+                  <Tag label={`当前 ${stateDetail.keyValidationItems.length} 项`} variant="amber" small />
                 </div>
-                {stateDetail.evidenceGaps.map((item, index) => (
-                  <Row key={item.gap} last={index === stateDetail.evidenceGaps.length - 1} style={{ alignItems: "flex-start" }}>
-                    <div style={{ width: 26, height: 26, borderRadius: 13, background: C.redLight, color: C.red, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
-                      !
-                    </div>
-                    <div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr", gap: 12, width: "100%" }}>
-                      <div>
-                        <div style={{ fontSize: 11, color: C.text2, marginBottom: 4 }}>缺的证据</div>
-                        <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.7 }}>{item.gap}</div>
+                <div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                  {stateDetail.keyValidationItems.map((item) => {
+                    const tone =
+                      item.priority === "P1"
+                        ? { bg: C.redLight, border: C.redBorder, color: C.red, tagBg: "#FFF1F0" }
+                        : { bg: C.amberLight, border: C.amberBorder, color: C.amber, tagBg: "#FFF7ED" };
+
+                    return (
+                      <div
+                        key={item.title}
+                        style={{
+                          background: C.surface,
+                          border: `1px solid ${C.border}`,
+                          borderLeft: `3px solid ${tone.color}`,
+                          borderRadius: 12,
+                          padding: "14px 16px 16px",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 16,
+                          minHeight: 250,
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              minWidth: 44,
+                              height: 30,
+                              padding: "0 10px",
+                              border: `1px solid ${tone.border}`,
+                              background: tone.tagBg,
+                              color: tone.color,
+                              fontSize: 13,
+                              fontWeight: 500,
+                            }}
+                          >
+                            {item.priority}
+                          </span>
+                          <span style={{ fontSize: 20, color: C.text0, fontWeight: 600, lineHeight: 1.4, letterSpacing: 0.1 }}>{item.title}</span>
+                        </div>
+
+                        <div style={{ display: "grid", gap: 10 }}>
+                          <div>
+                            <div style={{ fontSize: 13, color: C.text2, marginBottom: 5, fontWeight: 600 }}>当前缺口</div>
+                            <div style={{ fontSize: 14, color: C.text1, lineHeight: 1.8, letterSpacing: 0.1 }}>{item.gap}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 13, color: C.text2, marginBottom: 5, fontWeight: 600 }}>影响判断</div>
+                            <div style={{ fontSize: 14, color: C.text1, lineHeight: 1.8, letterSpacing: 0.1 }}>{item.affects}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 13, color: C.text2, marginBottom: 5, fontWeight: 600 }}>对动作的影响</div>
+                            <div style={{ fontSize: 14, color: C.text1, lineHeight: 1.8, letterSpacing: 0.1 }}>{item.impact}</div>
+                          </div>
+                        </div>
+
+                        <div style={{ marginTop: "auto", paddingTop: 4 }}>
+                          <div style={{ fontSize: 13, color: C.text2, marginBottom: 6, fontWeight: 600 }}>建议补证方式</div>
+                          <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                            <span style={{ color: tone.color, fontWeight: 700, fontSize: 14 }}>•</span>
+                            <span style={{ fontSize: 14, color: C.text0, lineHeight: 1.8, letterSpacing: 0.1 }}>{item.suggestion}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <div style={{ fontSize: 11, color: C.text2, marginBottom: 4 }}>影响哪个判断</div>
-                        <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>{item.affects}</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 11, color: C.text2, marginBottom: 4 }}>为什么限制动作</div>
-                        <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>{item.impact}</div>
-                      </div>
-                    </div>
-                  </Row>
-                ))}
+                    );
+                  })}
+                </div>
               </CardPad>
             </Card>
           </div>
@@ -2433,7 +2479,7 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
                   <span style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, textTransform: "uppercase", letterSpacing: 0.5 }}>
                     状态版本流 / 治理追溯
                   </span>
-                  <span style={{ fontSize: 12, color: C.text2 }}>{versionTraceExpanded ? "收起" : "展开"}</span>
+                  <span style={{ fontSize: 13, color: C.blue, fontWeight: 600 }}>{versionTraceExpanded ? "收起" : "展开"}</span>
                 </button>
                 {versionTraceExpanded && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
@@ -2996,135 +3042,613 @@ function CSPage() {
 }
 
 function GovernancePage() {
+  type GovernanceAgentId = "customer_state" | "sales" | "cs" | "presale" | "orchestrator";
   const g = stateGovernanceWorkbench;
+  const [adminCardOpen, setAdminCardOpen] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<GovernanceAgentId>("customer_state");
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const adminProfile = {
+    name: "Vicky Shou",
+    dept: "智能体平台 / 产品设计",
+    title: "平台管理员 · Staff",
+    phone: "138-0013-1024",
+    badge: "VS",
+  } as const;
+  const governanceAgents: Array<{
+    id: GovernanceAgentId;
+    englishName: string;
+    chineseName: string;
+    subtitle: string;
+    responsibility: string;
+    statusSummary: string;
+    rolePrompt: string;
+    specialCards: Array<{ title: string; content: string }>;
+    tableTitle: string;
+    tableColumns: string[];
+    tableColumnTemplate: string;
+    tableRows: Array<{ key: string; cells: ReactNode[] }>;
+    changeLog: Array<{
+      changedBy: string;
+      change: string;
+      effectiveAt: string;
+      impact: string;
+      roleImpact: string;
+      agentImpact: string;
+      status: string;
+    }>;
+  }> = [
+    {
+      id: "customer_state",
+      englishName: "Customer State Agent",
+      chineseName: "客户状态智能体",
+      subtitle: "负责客户状态结构、维度沉淀、解释结果与候选状态更新。",
+      responsibility: "重点治理它如何定义状态维度、如何输出候选状态更新，以及哪些内容必须进入 owner 确认。",
+      statusSummary: "已启用｜影响 3 个页面｜2 项待发布变更",
+      rolePrompt: `# 客户状态智能体
+
+## 关注要点
+- 维度是否进入正式版本沉淀
+- 候选状态更新的写入边界
+- 角色解释是否偏离统一 State 结构
+
+## 禁止动作边界
+- 不得直接写入正式 Customer State
+- 不得替销售 owner 生成最终业务决策
+- 不得绕过 owner 审批修改关键关系模式与核心 objection
+
+## 让位 / 交接时机
+- 当进入成交推进或明确业务动作决策时，让位给销售智能体
+- 当 route、owner 或 review 门槛发生变化时，让位给旅程编排器
+
+## 生成内容规范
+- 可生成：候选状态更新、证据归纳、不确定性提示、角色解释
+- 候选状态更新只作为建议，不直接入库
+- 涉及关系模式、核心异议、owner 判断时必须 owner 确认
+
+## 职责边界
+- 服务对象：销售 owner、客服、经理
+- 不负责：成交推进、外呼动作、route 切换决策
+- 协作边界：为销售智能体和旅程编排器提供状态理解基础，不替代 owner 判断`,
+      specialCards: [
+        { title: "冲突处理原则", content: "当事实记录与角色解释冲突时，以一线事实和明确证据优先，角色解释只能作为补充视角。" },
+        { title: "输出是否必须 owner 确认", content: "涉及关键维度变更、关系结构调整、核心 objection 更新时，必须进入 owner 确认。" },
+        { title: "写入边界", content: "candidate state updates 只可写入候选缓冲区，不可直接覆盖正式版本与治理规则。" },
+      ],
+      tableTitle: "维度配置表",
+      tableColumns: ["维度名", "定义说明", "进入版本沉淀", "首屏显示", "角色共享", "适用页面", "适用角色", "编辑"],
+      tableColumnTemplate: "1.1fr 1.8fr 0.8fr 0.8fr 0.8fr 1.1fr 1fr auto",
+      tableRows: g.stateDimensions.map((item) => ({
+        key: item.code,
+        cells: [
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text0, marginBottom: 4 }}>{item.name}</div>
+            <div style={{ fontSize: 12, color: C.text2 }}>{item.code}</div>
+          </div>,
+          <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.75 }}>{item.description}</div>,
+          <GovernanceToggle enabled={item.versioned} />,
+          <GovernanceToggle enabled={item.visibleOnTop} />,
+          <GovernanceToggle enabled={item.sharedAcrossRoles} />,
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{item.pages.map((page) => <Tag key={page} label={page} variant="neutral" small />)}</div>,
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{item.roles.map((role) => <Tag key={role} label={role} variant="blue" small />)}</div>,
+          <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>编辑</SecondaryBtn>,
+        ],
+      })),
+      changeLog: g.changeLog.filter((item) => item.agentImpact.includes("Customer")),
+    },
+    {
+      id: "sales",
+      englishName: "Sales Agent",
+      chineseName: "销售智能体",
+      subtitle: "负责销售动作建议、沟通草稿、异议处理与跟进节奏建议。",
+      responsibility: "重点治理它输出什么销售类结果、在哪些阶段启用、哪些内容必须由 owner 最终确认。",
+      statusSummary: "已启用｜输出需 owner 确认",
+      rolePrompt: `# 销售智能体
+
+## 关注要点
+- 输出建议不能越权替代 owner
+- 跟进时机建议要结合阶段和风险
+- 沟通草稿不能出现违规承诺与过度逼单
+
+## 禁止动作边界
+- 不得承诺折扣、金融政策、交付窗口等超权限信息
+- 不得绕过授权直接联系受限对象
+- 不得把建议动作直接视为正式任务
+
+## 让位 / 交接时机
+- 技术验证升高时让位给售前智能体
+- 服务投诉或回访场景让位给客服智能体
+- 高风险 route 冲突时让位给旅程编排器 / 经理 review
+
+## 生成内容规范
+- 可生成：跟进建议、沟通草稿、试驾总结草稿、异议处理提示、联系时机建议、交接摘要
+- 所有销售类输出默认只是建议
+- 涉及价格承诺、跨角色交接、重大状态判断时必须 owner 确认
+
+## 职责边界
+- 服务对象：销售 owner
+- 不负责：写入客户状态、定义客服触达规则、自动切换 owner
+- 协作边界：依赖客户状态智能体提供解释基础，配合旅程编排器调整节奏，不直接决定 route`,
+      specialCards: [
+        { title: "关注要点", content: "重点关注客户阶段、核心异议、联系时机与销售 owner 当前目标，不生成脱离上下文的销售话术。" },
+        { title: "禁止动作边界", content: "不得承诺折扣、金融政策、交付窗口等超权限信息，不得绕过授权直接联系受限对象。" },
+        { title: "让位 / 交接时机", content: "当技术验证、服务争议或高风险冲突升高时，需提示让位给售前、客服或经理 review。" },
+      ],
+      tableTitle: "输出规范表",
+      tableColumns: ["输出类型", "说明", "是否启用", "必须 owner 确认", "适用阶段", "适用页面", "编辑"],
+      tableColumnTemplate: "1fr 1.6fr 0.8fr 0.9fr 1fr 1fr auto",
+      tableRows: [
+        ["跟进建议", "根据阶段、异议与窗口给出下一步推进建议。", true, true, "意向 / 评估", "我的工作台"],
+        ["沟通草稿", "生成可修改的销售沟通文案。", true, true, "全阶段", "当前任务区"],
+        ["试驾总结草稿", "沉淀试驾后要点与后续推进提示。", true, true, "试驾后", "销售轻记录"],
+        ["异议处理提示", "针对 objection 给出应对切口与材料建议。", true, true, "评估 / 成交前", "客户状态工作台"],
+        ["联系时机建议", "结合活跃度和阶段给出触达节奏。", true, false, "全阶段", "我的工作台"],
+        ["交接摘要", "在需要让位时输出交接给售前/客服的摘要。", false, true, "升级场景", "客户状态工作台"],
+      ].map((item) => ({
+        key: item[0] as string,
+        cells: [
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.text0 }}>{item[0]}</div>,
+          <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.75 }}>{item[1]}</div>,
+          <GovernanceToggle enabled={item[2] as boolean} />,
+          <GovernanceToggle enabled={item[3] as boolean} />,
+          <Tag label={item[4] as string} variant="neutral" small />,
+          <Tag label={item[5] as string} variant="blue" small />,
+          <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>编辑</SecondaryBtn>,
+        ],
+      })),
+      changeLog: [
+        { changedBy: "周岚", change: "新增试驾总结草稿模板", effectiveAt: "2026-03-21 11:20", impact: "销售轻记录", roleImpact: "销售", agentImpact: "销售智能体", status: "待发布" },
+        { changedBy: "王芳", change: "提高价格相关内容的 owner 确认门槛", effectiveAt: "2026-03-20 18:10", impact: "当前任务区", roleImpact: "销售 owner", agentImpact: "销售智能体", status: "已生效" },
+      ],
+    },
+    {
+      id: "cs",
+      englishName: "CS Agent",
+      chineseName: "客服智能体",
+      subtitle: "负责服务通知、回访建议、满意度回收与异常升级提示。",
+      responsibility: "重点治理客服类任务是否允许主动触达、渠道限制、确认要求和被打扰风险控制。",
+      statusSummary: "已启用｜影响 2 个页面｜渠道受限",
+      rolePrompt: `# 客服智能体
+
+## 关注要点
+- 主动触达必须遵守授权与渠道偏好
+- 服务响应不能越权承诺
+- 投诉和被打扰风险要优先拦截
+
+## 禁止动作边界
+- 不得主动联系未授权对象
+- 不得承诺折扣、交付与金融政策
+- 不得将服务反馈直接升级为正式状态结论
+
+## 让位 / 交接时机
+- 涉及成交推进时让位给销售智能体
+- 涉及技术解释时让位给售前智能体
+- 风险升级与 route 冲突时让位给旅程编排器 / 经理
+
+## 生成内容规范
+- 可生成：服务通知、外呼回访、满意度回访、异常升级建议、服务反馈结构化结果
+- 服务反馈结构化结果可进入候选记录，但不能自动写入最终服务结论
+- 主动外呼、异常升级建议默认需要客服 owner 确认
+
+## 职责边界
+- 服务对象：客服 owner 与服务协同角色
+- 不负责：成交推进、技术方案说明、客户状态版本判断
+- 协作边界：与销售智能体共享上下文，配合旅程编排器升级异常，但不改写 owner`,
+      specialCards: [
+        { title: "允许 / 受限动作", content: "允许发送服务通知与售后资料；受限于主动联系配偶、承诺折扣、跨角色说明金融政策。" },
+        { title: "渠道偏好规则", content: "优先遵守客户已授权渠道；当客户明确拒绝外呼时，仅保留被动响应与授权内触达。" },
+        { title: "投诉 / 被打扰风险控制", content: "同一自然日避免重复主动触达；出现投诉信号时，优先升级人工 review。" },
+      ],
+      tableTitle: "触达与服务配置表",
+      tableColumns: ["任务类型", "说明", "渠道限制", "允许主动触达", "需要确认", "适用页面", "编辑"],
+      tableColumnTemplate: "1fr 1.5fr 1fr 0.9fr 0.8fr 1fr auto",
+      tableRows: [
+        ["服务通知", "发送服务节点通知与已授权资料。", "微信 / 短信", true, false, "客服触达检查"],
+        ["外呼回访", "对服务节点后的体验做主动回访。", "仅授权电话", false, true, "客服触达检查"],
+        ["满意度回访", "收集服务满意度和负面反馈。", "微信优先", true, true, "客服触达检查"],
+        ["异常升级建议", "发现服务异常时建议升级人工处理。", "不限", true, true, "客户状态工作台"],
+        ["服务反馈结构化结果", "把服务反馈整理成可追溯结果。", "不限", false, false, "客户状态工作台"],
+      ].map((item) => ({
+        key: item[0] as string,
+        cells: [
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.text0 }}>{item[0]}</div>,
+          <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.75 }}>{item[1]}</div>,
+          <Tag label={item[2] as string} variant="neutral" small />,
+          <GovernanceToggle enabled={item[3] as boolean} />,
+          <GovernanceToggle enabled={item[4] as boolean} />,
+          <Tag label={item[5] as string} variant="blue" small />,
+          <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>编辑</SecondaryBtn>,
+        ],
+      })),
+      changeLog: [
+        { changedBy: "李明", change: "补充满意度回访的渠道偏好限制", effectiveAt: "2026-03-21 09:50", impact: "客服触达检查", roleImpact: "客服", agentImpact: "客服智能体", status: "已生效" },
+        { changedBy: "周岚", change: "新增投诉风险下的强制确认规则", effectiveAt: "2026-03-20 16:40", impact: "异常升级", roleImpact: "客服、经理", agentImpact: "客服智能体", status: "待发布" },
+      ],
+    },
+    {
+      id: "presale",
+      englishName: "Presale Agent",
+      chineseName: "售前智能体",
+      subtitle: "负责技术解释、材料推荐、技术风险边界说明与售前支持建议。",
+      responsibility: "重点治理售前智能体在什么条件下介入、可以生成哪些技术支持类内容、何时可主导参与。",
+      statusSummary: "已启用｜技术支持需触发条件",
+      rolePrompt: `# 售前智能体
+
+## 关注要点
+- 技术解释不能脱离已确认事实
+- 技术介入要有明确触发条件
+- 不能替销售承接非技术类推进任务
+
+## 禁止动作边界
+- 不得把技术支持内容包装成成交承诺
+- 不得直接主导非技术类客户推进
+- 不得绕过销售 owner 自行升级 route
+
+## 让位 / 交接时机
+- 技术问题解决后让位回销售智能体
+- 服务类问题出现时让位给客服智能体
+- route 或 owner 争议时让位给旅程编排器
+
+## 生成内容规范
+- 可生成：技术解释摘要、技术材料推荐、风险边界说明、售前支持建议
+- 技术材料推荐与边界说明仅作为支持资料
+- 技术验证升高时，售前支持建议需要销售 owner 确认后生效
+
+## 职责边界
+- 服务对象：销售 owner 与客户技术验证场景
+- 不负责：非技术类成交推进、服务投诉处理、最终 route 决策
+- 协作边界：与销售智能体协同服务技术验证阶段，与旅程编排器共享介入信号，不自行升级 owner`,
+      specialCards: [
+        { title: "技术验证型问题分类", content: "区分参数确认、能力边界、竞品对照、交付风险四类问题，避免售前内容泛化。" },
+        { title: "介入条件", content: "客户明确提出技术验证、竞品参数差异、功能边界确认时，允许售前进入协同支持。" },
+        { title: "主导候选条件", content: "只有当技术验证成为推进主阻力时，售前才进入主导候选，并需销售 owner 确认。" },
+      ],
+      tableTitle: "技术支持配置表",
+      tableColumns: ["能力模块", "说明", "是否启用", "可主导介入", "适用页面", "编辑"],
+      tableColumnTemplate: "1.1fr 1.8fr 0.8fr 0.9fr 1fr auto",
+      tableRows: [
+        ["技术解释摘要", "把复杂技术信息整理为可交付说明。", true, false, "客户状态工作台"],
+        ["技术材料推荐", "根据问题类型推荐适配材料。", true, false, "售前支持页"],
+        ["风险边界说明", "明确技术能力边界与使用限制。", true, false, "客户状态工作台"],
+        ["售前支持建议", "在需要技术协同时输出行动建议。", true, true, "客户状态工作台"],
+      ].map((item) => ({
+        key: item[0] as string,
+        cells: [
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.text0 }}>{item[0]}</div>,
+          <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.75 }}>{item[1]}</div>,
+          <GovernanceToggle enabled={item[2] as boolean} />,
+          <GovernanceToggle enabled={item[3] as boolean} />,
+          <Tag label={item[4] as string} variant="blue" small />,
+          <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>编辑</SecondaryBtn>,
+        ],
+      })),
+      changeLog: [
+        { changedBy: "赵晨", change: "新增技术材料推荐模块", effectiveAt: "2026-03-21 10:05", impact: "售前支持页", roleImpact: "售前、销售", agentImpact: "售前智能体", status: "已生效" },
+      ],
+    },
+    {
+      id: "orchestrator",
+      englishName: "Orchestrator",
+      chineseName: "旅程编排器",
+      subtitle: "负责 route、owner、handoff 规则以及 review / override 机制。",
+      responsibility: "重点治理不同场景下默认 owner、自动切换条件、review 门槛和升级逻辑。",
+      statusSummary: "已启用｜影响 4 个页面｜1 项待发布变更",
+      rolePrompt: `# 旅程编排器
+
+## 关注要点
+- owner 与 route 规则必须稳定可解释
+- 高风险冲突禁止自动切换
+- override 只在高权限 review 后生效
+
+## 禁止动作边界
+- 不得生成业务话术
+- 不得定义客户状态内容
+- 不得替业务 owner 直接落地执行动作
+
+## 让位 / 交接时机
+- 当进入具体业务执行时让位给销售 / 客服 / 售前智能体
+- 当进入经理 review 时让位给人工 override
+
+## 生成内容规范
+- 可生成：owner 建议、route 建议、handoff 提示、blocked action hints
+- route 建议和 owner 建议都只作为候选，不自动生效
+- 涉及跨角色切换、高风险升级时必须进入 review / override
+
+## 职责边界
+- 服务对象：owner、经理、多智能体协作流程
+- 不负责：业务话术、客户状态定义、服务触达策略
+- 协作边界：依赖客户状态智能体提供状态信号，调用其他智能体能力，但不替代任何业务 owner`,
+      specialCards: [
+        { title: "handoff 触发条件", content: "技术验证升高、服务问题升级、关系冲突上升、高风险异议持续时触发 handoff 候选。" },
+        { title: "review / override 门槛", content: "跨角色切换、高风险升级、blocked action 冲突时必须进入 review，经理可 override。" },
+        { title: "升级逻辑", content: "当 blocked action hints 被连续触发或 route 争议升高时，自动推送经理 review。" },
+      ],
+      tableTitle: "指派与流转规则表",
+      tableColumns: ["场景", "默认 owner", "route 规则", "自动切换", "需要 review", "影响页面 / 角色", "编辑"],
+      tableColumnTemplate: "1fr 1fr 1.4fr 0.8fr 0.8fr 1.2fr auto",
+      tableRows: g.ownershipRules.map((item) => ({
+        key: item.scenario,
+        cells: [
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.text0 }}>{item.scenario}</div>,
+          <Tag
+            label={
+              item.scenario.includes("成交前")
+                ? "销售"
+                : item.scenario.includes("交付后")
+                  ? "客服 / 售后"
+                  : item.scenario.includes("技术验证")
+                    ? "销售（售前候选）"
+                    : "经理 review"
+            }
+            variant="neutral"
+            small
+          />,
+          <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.75 }}>
+            <div style={{ marginBottom: 4 }}>{item.rule}</div>
+            <div style={{ color: C.text2 }}>触发：{item.trigger}</div>
+          </div>,
+          <GovernanceToggle enabled={item.mode.includes("自动")} />,
+          <GovernanceToggle enabled={item.review.includes("review") || item.review.includes("审批")} />,
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            <Tag label="客户状态工作台" variant="neutral" small />
+            <Tag label="销售 / 客服 / 经理" variant="blue" small />
+          </div>,
+          <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>编辑</SecondaryBtn>,
+        ],
+      })),
+      changeLog: g.changeLog.filter((item) => item.agentImpact.includes("Orchestrator")),
+    },
+  ];
+  const selectedAgentDetail = governanceAgents.find((item) => item.id === selectedAgent) ?? governanceAgents[0];
 
   return (
     <div>
       <Header page="governance" />
       <div style={{ maxWidth: 1320, margin: "24px auto 40px", padding: "0 28px", display: "grid", gap: 22 }}>
-        <Card style={{ borderColor: C.borderMd }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: C.text2, letterSpacing: 0.9, textTransform: "uppercase" }}>顶部摘要</div>
+        <Card style={{ borderColor: C.borderMd, overflow: "visible" }}>
           <CardPad>
-            <div className="governance-top-grid" style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 18, alignItems: "start" }}>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>治理总览</div>
-                <div style={{ fontSize: 30, fontWeight: 700, color: C.text0, lineHeight: 1.1, marginBottom: 10 }}>状态治理台</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 20, flexWrap: "wrap" }}>
+              <div style={{ flex: "1 1 560px" }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>摘要</div>
+                <div style={{ fontSize: 30, fontWeight: 700, color: C.text0, lineHeight: 1.1, marginBottom: 10 }}>智能体后台管理</div>
                 <div style={{ fontSize: 14, color: C.text1, lineHeight: 1.75, marginBottom: 14 }}>
-                  用于定义 Customer State 的结构、映射、审批边界与 owner 流转逻辑。这一页治理系统，不处理单个客户。
-                </div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <Tag label="高权限页面" variant="red" />
-                  <Tag label="系统逻辑治理" variant="blue" />
-                  <Tag label="最近 24 小时有变更" variant="amber" />
+                  本页面用于对所有智能体进行统一管理，可定义和修改话术风格、能力边界、任务类型、审批规则与协作方式。
                 </div>
               </div>
-              <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px" }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.7 }}>当前发布窗口</div>
-                <div style={{ display: "grid", gap: 10 }}>
-                  <div style={{ fontSize: 13, color: C.text1 }}>治理 owner：<strong style={{ color: C.text0 }}>Vicky</strong></div>
-                  <div style={{ fontSize: 13, color: C.text1 }}>默认审批链：<strong style={{ color: C.text0 }}>owner 审批 → manager review（高风险）</strong></div>
-                  <div style={{ fontSize: 13, color: C.text1 }}>最近生效时间：<strong style={{ color: C.text0 }}>2026-03-21 10:30</strong></div>
-                  <div style={{ fontSize: 13, color: C.text1 }}>变更状态：<Tag label="3 项待发布" variant="amber" small /></div>
+
+              <div style={{ position: "relative", flex: "0 0 320px", maxWidth: "100%" }}>
+                <div
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    padding: "12px 14px",
+                    borderRadius: 12,
+                    border: `1px solid ${C.border}`,
+                    background: C.surfaceAlt,
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 12, color: C.text2, marginBottom: 4 }}>管理员</div>
+                    <div style={{ fontSize: 13.5, color: C.text1 }}>点击头像查看信息</div>
+                  </div>
+                  <button
+                    onClick={() => setAdminCardOpen((prev) => !prev)}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: "50%",
+                      border: `1px solid ${C.blueBorder}`,
+                      background: C.blueLight,
+                      color: C.blue,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 15,
+                      fontWeight: 700,
+                      letterSpacing: 0.3,
+                      flexShrink: 0,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {adminProfile.badge}
+                  </button>
                 </div>
-              </div>
-            </div>
 
-            <div className="governance-summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginTop: 18 }}>
-              <GovernanceSummaryStat label="生效治理规则" value={g.summary.activeRulesCount} note="覆盖 State、页面结构、审批与流转。" />
-              <GovernanceSummaryStat label="待发布变更" value={g.summary.pendingChangesCount} note="进入发布队列，等待统一生效。" />
-              <GovernanceSummaryStat label="最近治理变更" value={g.summary.recentChangesCount} note="用于回溯规则演进与影响面。" />
-              <GovernanceSummaryStat label="受治理页面" value={g.summary.governedPagesCount} note="当前已纳入统一治理的业务页面数。" />
-            </div>
-          </CardPad>
-        </Card>
-
-        <Card>
-          <CardPad>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-              <SectionTitle>Block 1 · Customer State 维度配置</SectionTitle>
-              <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>新增维度</SecondaryBtn>
-            </div>
-            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8 }}>定义系统如何构造正式 Customer State，以及哪些维度进入版本沉淀、首屏展示与跨角色共享。</div>
-            {g.stateDimensions.map((item, index) => (
-              <DimensionRuleRow key={item.code} item={item} last={index === g.stateDimensions.length - 1} />
-            ))}
-          </CardPad>
-        </Card>
-
-        <Card>
-          <CardPad>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-              <SectionTitle>Block 2 · 工作台板块配置</SectionTitle>
-              <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>调整顺序</SecondaryBtn>
-            </div>
-            <div style={{ fontSize: 13, color: C.text2, marginBottom: 14 }}>说明不同页面如何消费同一套治理规则，包括板块顺序、首屏级别与折叠逻辑。</div>
-
-            <div className="governance-module-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-              {Object.values(g.workspaceModules).map((group) => (
-                <div key={group.name} style={{ border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", background: C.surfaceAlt }}>
-                  <div style={{ padding: "12px 14px", borderBottom: `1px solid ${C.border}`, background: C.surface }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text0 }}>{group.name}</div>
-                  </div>
-                  <div style={{ padding: "0 14px", background: C.surface }}>
-                    {group.modules.map((item, index) => (
-                      <ModuleConfigRow key={item.name} item={item} last={index === group.modules.length - 1} />
-                    ))}
-                  </div>
-                  <div style={{ padding: "12px 14px", borderTop: `1px solid ${C.border}`, background: C.surfaceAlt }}>
-                    <div style={{ fontSize: 11, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>板块开关</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {group.toggles.map((toggle) => (
-                        <div key={toggle.label} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-                          <span style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.6 }}>{toggle.label}</span>
-                          <GovernanceToggle enabled={toggle.enabled} />
-                        </div>
-                      ))}
+                {adminCardOpen && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 8px)",
+                      right: 0,
+                      width: "100%",
+                      background: C.surface,
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 12,
+                      boxShadow: "0 10px 24px rgba(16,24,40,0.08)",
+                      padding: "14px 16px",
+                      zIndex: 5,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: "50%",
+                          border: `1px solid ${C.blueBorder}`,
+                          background: C.blueLight,
+                          color: C.blue,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 16,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {adminProfile.badge}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 17, fontWeight: 700, color: C.text0, marginBottom: 4 }}>{adminProfile.name}</div>
+                        <Tag label="页面管理员" variant="blue" small />
+                      </div>
+                    </div>
+                    <div style={{ display: "grid", gap: 10 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "84px 1fr", gap: 10 }}>
+                        <div style={{ fontSize: 12.5, color: C.text2 }}>部门</div>
+                        <div style={{ fontSize: 13.5, color: C.text0 }}>{adminProfile.dept}</div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "84px 1fr", gap: 10 }}>
+                        <div style={{ fontSize: 12.5, color: C.text2 }}>职级</div>
+                        <div style={{ fontSize: 13.5, color: C.text0 }}>{adminProfile.title}</div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "84px 1fr", gap: 10 }}>
+                        <div style={{ fontSize: 12.5, color: C.text2 }}>联系电话</div>
+                        <div style={{ fontSize: 13.5, color: C.text0 }}>{adminProfile.phone}</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
+
           </CardPad>
         </Card>
 
-        <Card>
-          <CardPad>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-              <SectionTitle>Block 3 · Agent 输出与审批规则</SectionTitle>
-              <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>新增规则</SecondaryBtn>
-            </div>
-            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8 }}>界定不同 agent 可以生成什么、能否直接写入，以及在哪些条件下必须 owner 或 manager 介入审批。</div>
-            {g.agentRules.map((item, index) => (
-              <AgentRuleRow key={item.agent} item={item} last={index === g.agentRules.length - 1} />
-            ))}
-          </CardPad>
-        </Card>
-
-        <Card>
-          <CardPad>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-              <SectionTitle>Block 4 · Owner 指派与流转规则</SectionTitle>
-              <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>模拟流转</SecondaryBtn>
-            </div>
-            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8 }}>解释 owner / route 为什么会这样流转，并明确自动切换、建议切换和必须 review 的边界。</div>
-            {g.ownershipRules.map((item, index) => (
-              <OwnershipRuleRow key={item.scenario} item={item} last={index === g.ownershipRules.length - 1} />
-            ))}
-          </CardPad>
-        </Card>
-
-        <Card>
-          <CardPad>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-              <SectionTitle>Block 5 · 治理变更记录</SectionTitle>
-              <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>发布治理变更</SecondaryBtn>
-            </div>
-            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8 }}>用于追踪最近是谁改了什么、何时生效，以及影响了哪些页面、角色和 agent。</div>
-            {g.changeLog.map((item, index) => (
-              <GovernanceChangeRow key={`${item.effectiveAt}-${item.change}`} item={item} last={index === g.changeLog.length - 1} />
-            ))}
-          </CardPad>
-        </Card>
+        <div style={{ fontSize: 12, fontWeight: 600, color: C.text2, letterSpacing: 0.9, textTransform: "uppercase" }}>智能体治理目录</div>
+        <div className="agent-directory-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 14 }}>
+          {governanceAgents.map((agent) => (
+            <AgentDirectoryCard
+              key={agent.id}
+              agent={agent}
+              active={selectedAgent === agent.id && detailModalOpen}
+              onOpen={() => {
+                setSelectedAgent(agent.id);
+                setDetailModalOpen(true);
+              }}
+            />
+          ))}
+        </div>
       </div>
+
+      {detailModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(16,24,40,0.18)",
+            zIndex: 140,
+            padding: 24,
+          }}
+        >
+          <div
+            style={{
+              width: "calc(100vw - 48px)",
+              height: "calc(100vh - 48px)",
+              margin: "0 auto",
+              background: C.surface,
+              border: `1px solid ${C.border}`,
+              borderRadius: 18,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "18px 22px",
+                borderBottom: `1px solid ${C.border}`,
+                background: C.surface,
+                flexShrink: 0,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 12, color: C.text2, marginBottom: 6 }}>智能体参数仪表 / 规则详情</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: C.text0 }}>{selectedAgentDetail.chineseName}</div>
+              </div>
+              <button
+                onClick={() => setDetailModalOpen(false)}
+                style={{ border: "none", background: "transparent", fontSize: 28, lineHeight: 1, color: C.text0, cursor: "pointer", padding: 4 }}
+                aria-label="关闭"
+              >
+                ×
+              </button>
+            </div>
+
+            <div
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                overflowX: "hidden",
+                padding: "22px 24px 28px",
+              }}
+            >
+              <div style={{ display: "grid", gap: 18, minHeight: "min-content" }}>
+                <Card>
+                  <CardPad>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
+                      <div>
+                        <div style={{ fontSize: 11, color: C.text2, fontWeight: 600, letterSpacing: 0.7, textTransform: "uppercase", marginBottom: 8 }}>智能体角色定义 Prompt</div>
+                        <div style={{ fontSize: 26, fontWeight: 700, color: C.text0, marginBottom: 6 }}>{selectedAgentDetail.chineseName}</div>
+                        <div style={{ fontSize: 14, color: C.text1, lineHeight: 1.75 }}>{selectedAgentDetail.subtitle}</div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <Tag label={selectedAgentDetail.statusSummary} variant="blue" />
+                        <SecondaryBtn style={{ padding: "8px 12px", fontSize: 12 }}>编辑</SecondaryBtn>
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        background: C.surfaceAlt,
+                        border: `1px solid ${C.border}`,
+                        borderRadius: 12,
+                        padding: "16px 18px",
+                        fontSize: 14,
+                        color: C.text1,
+                        lineHeight: 1.9,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {selectedAgentDetail.rolePrompt}
+                    </div>
+                  </CardPad>
+                </Card>
+
+              <Card>
+                <CardPad>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+                    <SectionTitle>{selectedAgentDetail.tableTitle}</SectionTitle>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>新增规则</SecondaryBtn>
+                      <PrimaryBtn style={{ padding: "8px 12px", fontSize: 12 }}>保存修改</PrimaryBtn>
+                    </div>
+                  </div>
+                  <GovernanceRuleTable columns={selectedAgentDetail.tableColumns} rows={selectedAgentDetail.tableRows} columnTemplate={selectedAgentDetail.tableColumnTemplate} />
+                </CardPad>
+              </Card>
+
+              <Card>
+                <CardPad>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+                    <SectionTitle>治理变更记录</SectionTitle>
+                    <GhostBtn>查看全部记录</GhostBtn>
+                  </div>
+                  <div style={{ fontSize: 13, color: C.text2, marginBottom: 10 }}>用于回溯该智能体最近是谁改了什么、何时生效，以及影响了哪些页面和角色。</div>
+                  {selectedAgentDetail.changeLog.map((item, index) => (
+                    <GovernanceChangeRow key={`${selectedAgentDetail.id}-${item.effectiveAt}-${item.change}`} item={item} last={index === selectedAgentDetail.changeLog.length - 1} />
+                  ))}
+                </CardPad>
+              </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -3151,7 +3675,7 @@ export default function App() {
     { id: "workspace", label: "客户状态工作台" },
     { id: "sales", label: "销售轻记录" },
     { id: "cs", label: "客服触达检查" },
-    { id: "governance", label: "状态治理台" },
+    { id: "governance", label: "智能体后台管理" },
   ];
 
   return (
@@ -3159,7 +3683,7 @@ export default function App() {
       <style>{`
         input:focus { border-color: ${C.blue} !important; box-shadow: 0 0 0 3px ${C.blueLight}; }
         textarea:focus { border-color: ${C.blue} !important; box-shadow: 0 0 0 3px ${C.blueLight}; outline: none; }
-        button:hover { opacity: 0.88; }
+        button:hover { opacity: 0.94; }
         @media (max-width: 980px) {
           .workbench-dual,
           .workbench-summary-grid,
@@ -3171,6 +3695,9 @@ export default function App() {
           .governance-summary-grid,
           .governance-module-grid,
           .governance-row-grid,
+          .governance-rule-grid,
+          .governance-detail-grid,
+          .agent-directory-grid,
           .detail-cards-grid,
           .two-col,
           .split-grid,
@@ -3199,11 +3726,13 @@ export default function App() {
             fontSize: 13.5,
             fontWeight: 700,
             color: C.text0,
-            padding: "14px 20px 14px 0",
-            borderRight: `1px solid ${C.border}`,
-            marginRight: 4,
+            padding: "14px 16px",
+            border: `1px solid ${C.border}`,
+            borderRadius: 10,
+            margin: "10px 4px 10px 0",
             letterSpacing: -0.3,
             flexShrink: 0,
+            background: C.surfaceAlt,
           }}
         >
           客户旅程<span style={{ color: C.brick }}>·</span>系统
@@ -3214,15 +3743,15 @@ export default function App() {
               key={item.id}
               onClick={() => setPage(item.id)}
               style={{
-                background: "none",
-                border: "none",
-                padding: "15px 18px",
+                background: page === item.id ? C.surfaceAlt : "transparent",
+                border: `1px solid ${page === item.id ? C.border : "transparent"}`,
+                borderRadius: 10,
+                padding: "10px 14px",
                 cursor: "pointer",
-                fontSize: 13.5,
-                fontWeight: page === item.id ? 600 : 400,
+                fontSize: 13,
+                fontWeight: page === item.id ? 600 : 500,
                 color: page === item.id ? C.text0 : C.text2,
-                borderBottom: page === item.id ? `2px solid ${C.brick}` : "2px solid transparent",
-                marginBottom: -1,
+                margin: "0 4px",
                 transition: "color 0.15s",
                 whiteSpace: "nowrap",
                 flexShrink: 0,
@@ -3241,7 +3770,7 @@ export default function App() {
                 style={{
                   padding: "7px 10px",
                   borderRadius: 8,
-                  border: "none",
+                  border: `1px solid ${globalTaskState === state ? C.border : "transparent"}`,
                   background: globalTaskState === state ? C.surface : "transparent",
                   color: globalTaskState === state ? C.text0 : C.text2,
                   fontSize: 12,
@@ -3316,7 +3845,7 @@ export default function App() {
 
       {messagePanelOpen && (
         <div style={{ position: "fixed", top: 66, right: 28, width: 420, maxWidth: "calc(100vw - 32px)", zIndex: 120 }}>
-          <Card style={{ boxShadow: "0 14px 40px rgba(26,26,26,0.12)" }}>
+          <Card style={{ boxShadow: "0 8px 24px rgba(16,24,40,0.08)" }}>
             <CardPad>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                 <div>
