@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
-type PageId = "myWorkbench" | "workspace" | "sales" | "cs";
+type PageId = "myWorkbench" | "workspace" | "sales" | "cs" | "governance";
 type PillVariant = "green" | "blue" | "amber" | "red" | "neutral";
 type TagVariant = PillVariant | "purple";
 
@@ -64,7 +64,7 @@ type DecisionTensionData = {
   evidence: readonly string[];
 };
 
-type TaskPanelState = "待执行" | "整理中" | "待审批" | "已提交";
+type TaskPanelState = "待执行" | "执行中" | "整理中" | "确认本轮结果" | "已提交";
 
 const C = {
   bg: "#F7F6F2",
@@ -233,12 +233,12 @@ const customer = {
     },
     {
       id: "E-040",
-      type: "STATE_UPDATE",
-      typeLabel: "状态更新",
-      owner: "系统",
-      date: "11月17日",
-      summary: "状态升级：「配偶决策参与」列为高优先级阻力，当前进入双人决策验证阶段。",
-      status: "自动",
+      type: "PRE_SALES",
+      typeLabel: "售前咨询",
+      owner: "赵晨",
+      date: "11月15日",
+      summary: "围绕智能驾驶能力做了重点说明，明确 NOA、泊车辅助与安全冗余边界，帮助客户建立了对技术能力的初步认知。",
+      status: "已完成",
     },
     {
       id: "E-039",
@@ -450,6 +450,253 @@ const myWorkbench = {
       customerName: "刘浩",
       type: "状态版本更新",
       message: "配偶参与决策已进入主状态版本，需要你确认邀约方案与审批结果。",
+    },
+  ],
+} as const;
+
+const stateGovernanceWorkbench = {
+  summary: {
+    activeRulesCount: 24,
+    pendingChangesCount: 3,
+    recentChangesCount: 5,
+    governedPagesCount: 4,
+  },
+  stateDimensions: [
+    {
+      name: "旅程阶段",
+      code: "Journey Stage",
+      description: "定义客户所处推进阶段，并决定默认 owner 与板块优先级。",
+      versioned: true,
+      visibleOnTop: true,
+      sharedAcrossRoles: true,
+      pages: ["客户状态工作台", "我的工作台"],
+      roles: ["销售", "客服", "经理"],
+    },
+    {
+      name: "优先关注项",
+      code: "Priority",
+      description: "记录当前最值得处理的推进重点，用于任务编排与首屏提示。",
+      versioned: true,
+      visibleOnTop: true,
+      sharedAcrossRoles: true,
+      pages: ["客户状态工作台", "我的工作台"],
+      roles: ["销售", "客服"],
+    },
+    {
+      name: "异议事项",
+      code: "Objection",
+      description: "沉淀客户明确表达或推断出的持续阻力。",
+      versioned: true,
+      visibleOnTop: false,
+      sharedAcrossRoles: true,
+      pages: ["客户状态工作台", "当前任务区"],
+      roles: ["销售", "客服", "售前"],
+    },
+    {
+      name: "决策张力",
+      code: "Tension",
+      description: "描述当前最关键的决策拉扯，而非简单标签罗列。",
+      versioned: true,
+      visibleOnTop: true,
+      sharedAcrossRoles: true,
+      pages: ["客户状态工作台", "销售轻记录"],
+      roles: ["销售", "经理"],
+    },
+    {
+      name: "关系模式",
+      code: "Relationship Mode",
+      description: "定义当前是单人、双人还是多人协同决策结构。",
+      versioned: true,
+      visibleOnTop: false,
+      sharedAcrossRoles: true,
+      pages: ["客户状态工作台"],
+      roles: ["销售", "客服"],
+    },
+    {
+      name: "建议动作",
+      code: "Recommended Action",
+      description: "给出当前最合适的业务动作，但不直接等同于正式任务。",
+      versioned: false,
+      visibleOnTop: true,
+      sharedAcrossRoles: false,
+      pages: ["我的工作台", "当前任务区"],
+      roles: ["销售 owner", "客服 owner"],
+    },
+    {
+      name: "证据与不确定性",
+      code: "Evidence / Uncertainty",
+      description: "说明当前判断基于什么证据，以及缺口在哪里。",
+      versioned: true,
+      visibleOnTop: false,
+      sharedAcrossRoles: true,
+      pages: ["客户状态工作台", "销售轻记录", "客服触达检查"],
+      roles: ["销售", "客服", "经理"],
+    },
+    {
+      name: "角色视角解释",
+      code: "Role-specific Interpretation",
+      description: "允许销售、客服、经理看到不同解释口径，但不改写统一 State。",
+      versioned: false,
+      visibleOnTop: false,
+      sharedAcrossRoles: false,
+      pages: ["我的工作台", "客服触达检查"],
+      roles: ["销售", "客服", "经理"],
+    },
+  ],
+  workspaceModules: {
+    customerWorkspace: {
+      name: "客户状态工作台",
+      modules: [
+        { name: "当前客户承接卡", firstScreen: true, collapsible: false, order: 1, note: "固定置顶，承载 owner 与当前推进状态。" },
+        { name: "客户状态详情", firstScreen: true, collapsible: false, order: 2, note: "展示正式 State 结构与证据来源。" },
+        { name: "事件与版本", firstScreen: false, collapsible: true, order: 3, note: "用于追溯状态变更与触达历史。" },
+        { name: "责任移交记录", firstScreen: false, collapsible: true, order: 4, note: "仅高权限角色默认展开。" },
+      ],
+      toggles: [
+        { label: "显示“可行动 / 待验证”", enabled: true },
+        { label: "显示“判断相关特征”", enabled: true },
+        { label: "显示“责任移交记录”", enabled: true },
+      ],
+    },
+    myWorkbench: {
+      name: "我的工作台",
+      modules: [
+        { name: "今日待处理总览", firstScreen: true, collapsible: false, order: 1, note: "对 owner 呈现当日待办、待批、提醒。" },
+        { name: "我的任务", firstScreen: true, collapsible: false, order: 2, note: "按当前责任与时效排序。" },
+        { name: "待我审批", firstScreen: true, collapsible: true, order: 3, note: "承接 agent 输出审批。" },
+        { name: "系统提醒", firstScreen: false, collapsible: true, order: 4, note: "仅异常路由与高风险变更置顶。" },
+      ],
+      toggles: [
+        { label: "首屏显示“当前 owner”", enabled: true },
+        { label: "显示 manager override trace", enabled: false },
+        { label: "显示整体状态可信度", enabled: false },
+      ],
+    },
+    taskPanel: {
+      name: "当前任务区",
+      modules: [
+        { name: "待执行", firstScreen: true, collapsible: false, order: 1, note: "面向单任务的执行入口。" },
+        { name: "执行中", firstScreen: true, collapsible: false, order: 2, note: "保留执行材料与一线记录。" },
+        { name: "整理中", firstScreen: false, collapsible: false, order: 3, note: "聚合本轮执行材料并生成候选报告。" },
+        { name: "确认本轮结果", firstScreen: false, collapsible: false, order: 4, note: "进入 owner 或 manager 审核确认流。" },
+        { name: "已提交", firstScreen: false, collapsible: false, order: 5, note: "作为任务闭环与版本触发点。" },
+      ],
+      toggles: [
+        { label: "默认显示执行材料区", enabled: true },
+        { label: "显示跨角色解释差异", enabled: false },
+        { label: "显示审批前后 diff", enabled: true },
+      ],
+    },
+  },
+  agentRules: [
+    {
+      agent: "销售 Agent",
+      outputs: ["推荐动作", "沟通草稿", "角色视角分析"],
+      approvalRequired: true,
+      managerReviewRequired: false,
+      directWriteAllowed: false,
+      writeBoundary: "仅可写入候选输出，不可改正式 State。",
+    },
+    {
+      agent: "Customer Agent",
+      outputs: ["候选状态更新", "证据归纳", "不确定性提示"],
+      approvalRequired: true,
+      managerReviewRequired: false,
+      directWriteAllowed: false,
+      writeBoundary: "不可直接写入正式 Customer State。",
+    },
+    {
+      agent: "Journey Orchestrator",
+      outputs: ["owner 建议", "route 建议", "下一步任务编排"],
+      approvalRequired: true,
+      managerReviewRequired: true,
+      directWriteAllowed: false,
+      writeBoundary: "高风险或跨角色切换时必须进入 manager review。",
+    },
+    {
+      agent: "客服 Agent",
+      outputs: ["触达建议", "风险提示", "服务说明草稿"],
+      approvalRequired: true,
+      managerReviewRequired: false,
+      directWriteAllowed: false,
+      writeBoundary: "不可承诺价格与跨权限政策。",
+    },
+  ],
+  ownershipRules: [
+    {
+      scenario: "成交前默认主导",
+      rule: "销售为 owner，客服与售前以协同身份进入。",
+      trigger: "客户仍处于意向、试驾、方案评估或成交推进阶段",
+      mode: "自动切换",
+      review: "无需 manager review",
+    },
+    {
+      scenario: "交付后默认主导",
+      rule: "售后或客服成为 owner，销售转为支持角色。",
+      trigger: "状态进入交付、售后服务、复购培育阶段",
+      mode: "自动切换",
+      review: "关键客户可被 manager override",
+    },
+    {
+      scenario: "技术验证升高",
+      rule: "售前进入主导候选，但需销售 owner 确认。",
+      trigger: "客户决策高度依赖技术验证、方案定制或竞品对照",
+      mode: "建议切换",
+      review: "owner 审批后生效",
+    },
+    {
+      scenario: "风险冲突升高",
+      rule: "route 必须升级到经理 review，禁止自动换 owner。",
+      trigger: "高风险、跨角色争议、合规边界不清",
+      mode: "禁止自动切换",
+      review: "必须 manager review",
+    },
+  ],
+  changeLog: [
+    {
+      changedBy: "Vicky",
+      change: "新增“可行动 / 待验证”板块",
+      effectiveAt: "2026-03-21 10:30",
+      impact: "客户状态工作台",
+      roleImpact: "销售、客服",
+      agentImpact: "Customer Agent",
+      status: "已生效",
+    },
+    {
+      changedBy: "周岚",
+      change: "关闭“整体状态可信度”首屏显示",
+      effectiveAt: "2026-03-21 09:40",
+      impact: "我的工作台",
+      roleImpact: "销售 owner",
+      agentImpact: "Journey Orchestrator",
+      status: "已生效",
+    },
+    {
+      changedBy: "Vicky",
+      change: "提高高风险 route 的 manager review 门槛",
+      effectiveAt: "2026-03-21 08:55",
+      impact: "状态路由规则",
+      roleImpact: "经理、销售",
+      agentImpact: "Journey Orchestrator",
+      status: "待发布",
+    },
+    {
+      changedBy: "李明",
+      change: "补充客服 Agent 对服务承诺草稿的写入边界",
+      effectiveAt: "2026-03-20 17:20",
+      impact: "客服触达检查",
+      roleImpact: "客服",
+      agentImpact: "客服 Agent",
+      status: "已生效",
+    },
+    {
+      changedBy: "Vicky",
+      change: "新增“决策张力”进入正式版本沉淀",
+      effectiveAt: "2026-03-20 16:10",
+      impact: "Customer State",
+      roleImpact: "销售、经理",
+      agentImpact: "Customer Agent",
+      status: "已生效",
     },
   ],
 } as const;
@@ -879,6 +1126,228 @@ function SummaryStat({ label, value, variant }: { label: string; value: number; 
   );
 }
 
+function GovernanceSummaryStat({ label, value, note }: { label: string; value: number; note: string }) {
+  return (
+    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px" }}>
+      <div style={{ fontSize: 11, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.6 }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 8 }}>
+        <span style={{ fontSize: 28, fontWeight: 700, color: C.text0, lineHeight: 1 }}>{value}</span>
+        <span style={{ fontSize: 12, color: C.text2 }}>条</span>
+      </div>
+      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.6 }}>{note}</div>
+    </div>
+  );
+}
+
+function GovernanceToggle({ enabled }: { enabled: boolean }) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: enabled ? "flex-end" : "flex-start",
+        width: 34,
+        height: 20,
+        borderRadius: 999,
+        background: enabled ? C.greenLight : C.surfaceAlt,
+        border: `1px solid ${enabled ? C.greenBorder : C.border}`,
+        padding: 2,
+      }}
+    >
+      <span style={{ width: 14, height: 14, borderRadius: 999, background: enabled ? C.green : C.text3 }} />
+    </span>
+  );
+}
+
+function DimensionRuleRow({ item, last = false }: { item: (typeof stateGovernanceWorkbench.stateDimensions)[number]; last?: boolean }) {
+  return (
+    <div
+      className="governance-row-grid"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1.2fr 2fr 0.9fr 0.9fr 0.9fr 1.4fr auto",
+        gap: 14,
+        alignItems: "start",
+        padding: "14px 0",
+        borderBottom: last ? "none" : `1px solid ${C.border}`,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: C.text0, marginBottom: 4 }}>{item.name}</div>
+        <div style={{ fontSize: 11.5, color: C.text2 }}>{item.code}</div>
+      </div>
+      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item.description}</div>
+      <div>
+        <div style={{ fontSize: 11, color: C.text2, marginBottom: 6 }}>版本沉淀</div>
+        <GovernanceToggle enabled={item.versioned} />
+      </div>
+      <div>
+        <div style={{ fontSize: 11, color: C.text2, marginBottom: 6 }}>首屏显示</div>
+        <GovernanceToggle enabled={item.visibleOnTop} />
+      </div>
+      <div>
+        <div style={{ fontSize: 11, color: C.text2, marginBottom: 6 }}>角色共享</div>
+        <GovernanceToggle enabled={item.sharedAcrossRoles} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {item.pages.map((page) => (
+            <Tag key={page} label={page} variant="neutral" small />
+          ))}
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {item.roles.map((role) => (
+            <Tag key={role} label={role} variant="blue" small />
+          ))}
+        </div>
+      </div>
+      <div style={{ justifySelf: "end" }}>
+        <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>编辑</SecondaryBtn>
+      </div>
+    </div>
+  );
+}
+
+function ModuleConfigRow({
+  item,
+  last = false,
+}: {
+  item: {
+    name: string;
+    firstScreen: boolean;
+    collapsible: boolean;
+    order: number;
+    note: string;
+  };
+  last?: boolean;
+}) {
+  return (
+    <div
+      className="governance-row-grid"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1.2fr 0.7fr 0.8fr 0.8fr 2fr auto",
+        gap: 12,
+        alignItems: "center",
+        padding: "12px 0",
+        borderBottom: last ? "none" : `1px solid ${C.border}`,
+      }}
+    >
+      <div style={{ fontSize: 13.5, color: C.text0, fontWeight: 600 }}>{item.name}</div>
+      <div style={{ fontSize: 12.5, color: C.text1 }}>#{item.order}</div>
+      <div><GovernanceToggle enabled={item.firstScreen} /></div>
+      <div><GovernanceToggle enabled={item.collapsible} /></div>
+      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item.note}</div>
+      <div style={{ justifySelf: "end" }}>
+        <SecondaryBtn style={{ padding: "6px 10px", fontSize: 12 }}>调整</SecondaryBtn>
+      </div>
+    </div>
+  );
+}
+
+function AgentRuleRow({ item, last = false }: { item: (typeof stateGovernanceWorkbench.agentRules)[number]; last?: boolean }) {
+  return (
+    <div
+      className="governance-row-grid"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1.6fr 0.8fr 0.8fr 0.8fr 1.5fr auto",
+        gap: 14,
+        alignItems: "start",
+        padding: "14px 0",
+        borderBottom: last ? "none" : `1px solid ${C.border}`,
+      }}
+    >
+      <div style={{ fontSize: 14, color: C.text0, fontWeight: 700 }}>{item.agent}</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {item.outputs.map((output) => (
+          <Tag key={output} label={output} variant="purple" small />
+        ))}
+      </div>
+      <div>
+        <div style={{ fontSize: 11, color: C.text2, marginBottom: 6 }}>owner 审批</div>
+        <GovernanceToggle enabled={item.approvalRequired} />
+      </div>
+      <div>
+        <div style={{ fontSize: 11, color: C.text2, marginBottom: 6 }}>经理复核</div>
+        <GovernanceToggle enabled={item.managerReviewRequired} />
+      </div>
+      <div>
+        <div style={{ fontSize: 11, color: C.text2, marginBottom: 6 }}>直接写入</div>
+        <GovernanceToggle enabled={item.directWriteAllowed} />
+      </div>
+      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item.writeBoundary}</div>
+      <div style={{ justifySelf: "end" }}>
+        <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>查看边界</SecondaryBtn>
+      </div>
+    </div>
+  );
+}
+
+function OwnershipRuleRow({ item, last = false }: { item: (typeof stateGovernanceWorkbench.ownershipRules)[number]; last?: boolean }) {
+  return (
+    <div
+      className="governance-row-grid"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1.5fr 1.8fr 0.9fr 1fr auto",
+        gap: 14,
+        alignItems: "start",
+        padding: "14px 0",
+        borderBottom: last ? "none" : `1px solid ${C.border}`,
+      }}
+    >
+      <div style={{ fontSize: 14, color: C.text0, fontWeight: 700 }}>{item.scenario}</div>
+      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item.rule}</div>
+      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item.trigger}</div>
+      <div>
+        <Tag label={item.mode} variant={item.mode.includes("自动") ? "green" : item.mode.includes("禁止") ? "red" : "amber"} small />
+      </div>
+      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item.review}</div>
+      <div style={{ justifySelf: "end" }}>
+        <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>查看流转</SecondaryBtn>
+      </div>
+    </div>
+  );
+}
+
+function GovernanceChangeRow({ item, last = false }: { item: (typeof stateGovernanceWorkbench.changeLog)[number]; last?: boolean }) {
+  return (
+    <div
+      className="governance-row-grid"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1.6fr 1fr 1fr 1fr 0.8fr auto",
+        gap: 14,
+        alignItems: "start",
+        padding: "14px 0",
+        borderBottom: last ? "none" : `1px solid ${C.border}`,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 13.5, color: C.text0, fontWeight: 700 }}>{item.effectiveAt}</div>
+        <div style={{ fontSize: 11.5, color: C.text2 }}>{item.changedBy}</div>
+      </div>
+      <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item.change}</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        <Tag label={item.impact} variant="neutral" small />
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        <Tag label={item.roleImpact} variant="blue" small />
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        <Tag label={item.agentImpact} variant="purple" small />
+      </div>
+      <div>
+        <Tag label={item.status} variant={item.status === "已生效" ? "green" : "amber"} small />
+      </div>
+      <div style={{ justifySelf: "end" }}>
+        <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>差异</SecondaryBtn>
+      </div>
+    </div>
+  );
+}
+
 function WorkItemRow({
   item,
   last = false,
@@ -1125,10 +1594,11 @@ function Header({ page }: HeaderProps) {
     workspace: "客户状态工作台",
     sales: "销售轻记录",
     cs: "客服触达检查",
+    governance: "状态治理台",
   };
   const summary = customer.summaryBlock;
 
-  if (page === "workspace" || page === "myWorkbench") {
+  if (page === "workspace" || page === "myWorkbench" || page === "governance") {
     return (
       <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: "14px 28px" }}>
         <div style={{ fontSize: 11.5, color: C.text2 }}>{pageTitles[page]}</div>
@@ -1210,9 +1680,11 @@ function Header({ page }: HeaderProps) {
 }
 
 function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: WorkspacePageProps) {
-  const [workTab, setWorkTab] = useState<"history" | "ownerTasks" | "assignment">("history");
+  const [workTab, setWorkTab] = useState<"history" | "assignment">("history");
+  const [historyOwnerFilter, setHistoryOwnerFilter] = useState<"全部" | "王芳" | "赵晨" | "李明">("全部");
   const [versionTraceExpanded, setVersionTraceExpanded] = useState(false);
   const [inputModalOpen, setInputModalOpen] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
   const [executionInput, setExecutionInput] = useState("客户反馈：配偶愿意参加周末到店体验，但希望先看品牌对比和家庭空间体验。");
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [uploadedMaterials, setUploadedMaterials] = useState([
@@ -1221,7 +1693,6 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
   ]);
   const summary = customer.summaryBlock;
   const stateDetail = customer.customerStateDetail;
-  const ownerEvents = customer.events.filter((event) => event.owner === customer.currentOwner);
   const reviewPacket = {
     rawSummary: "本次执行共采集 2 份材料，确认配偶愿意参与到店体验，核心关注点集中在品牌认知、家庭空间体验和预算上限。",
     interpretation:
@@ -1242,6 +1713,31 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
     { label: "正在提取候选状态更新", status: "进行中" },
     { label: "正在生成销售视角分析", status: "等待中" },
   ] as const;
+  const liveWorkspace = {
+    suggestedActions: [
+      "优先按“家庭体验 + 品牌对比”双线组织本轮沟通，不要直接切报价。",
+      "先把配偶顾虑拆成品牌认知、空间体验、预算三个维度，再决定是否需要经理介入。",
+      "如果客户能确认周末档期，下一步可同步准备家庭场景试驾路线与服务承诺材料。",
+    ],
+    blockedItems: ["仍不得直接联系配偶本人", "折扣承诺与金融方案口径不能先于审批给出", "售后响应时效不能口头扩大承诺"],
+    currentUnderstanding:
+      "当前任务已从单人高意向跟进切换为双人共同决策推动。客户本人在推进，配偶态度出现松动，但是否真正在意品牌形象、空间体验还是保值率，还需要继续收集一手表达。",
+    questionsToConfirm: ["配偶愿意参加的是到店体验还是单独看资料？", "客户预算上限是否因家庭讨论发生变化？", "这次补充信息里有没有明确提到竞品品牌？"],
+    risks: ["如果上传材料只堆事实、不补充背景，助手会误把配偶兴趣上升解读成异议消退。", "若现在直接生成完整报告，可能会把未验证判断写进本轮结论。"],
+  } as const;
+  const submittedHistoryEvent = {
+    id: "E-042",
+    type: "SALES_VISIT",
+    typeLabel: "销售拜访",
+    owner: customer.currentOwner,
+    date: "今天",
+    summary: "已提交本轮家庭体验邀约整理结果：确认客户愿意继续推进配偶共同体验，并补充了品牌对比、家庭空间体验与预算边界相关一线信息。",
+    status: "已提交",
+  } as const;
+  const historyEvents = (taskPanelState === "已提交" ? [submittedHistoryEvent, ...customer.events] : customer.events).filter(
+    (event) => historyOwnerFilter === "全部" || event.owner === historyOwnerFilter,
+  );
+  const historyOwnerOptions = ["全部", "王芳", "赵晨", "李明"] as const;
 
   const uploadMaterials = () => {
     const incoming =
@@ -1251,6 +1747,26 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
 
     setUploadedMaterials((prev) => [...prev, ...incoming]);
     setSelectedFiles([]);
+    setDraftSaved(false);
+  };
+
+  const saveDraft = () => {
+    if (selectedFiles.length > 0) {
+      uploadMaterials();
+    }
+    setDraftSaved(true);
+  };
+
+  const resumeSupplement = () => {
+    setDraftSaved(false);
+  };
+
+  const generateRoundReport = () => {
+    if (selectedFiles.length > 0) {
+      uploadMaterials();
+    }
+    setDraftSaved(true);
+    setTaskPanelState("整理中");
   };
 
   const renderTaskStateBody = () => {
@@ -1281,11 +1797,161 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
           </div>
           <div style={{ background: C.surface, border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: "12px 14px", width: "100%" }}>
             <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>信息输入</div>
-            <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.65, marginBottom: 10 }}>记录第一手客户信息、上传材料并提交材料。</div>
+            <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.65, marginBottom: 10 }}>进入执行态后，owner 可一边补材料，一边让助手实时整理理解与风险。</div>
             <div style={{ width: "100%" }}>
-              <SecondaryBtn style={{ width: "100%" }} onClick={() => setInputModalOpen(true)}>
-                提交面客资料
-              </SecondaryBtn>
+              <PrimaryBtn style={{ width: "100%" }} onClick={() => setTaskPanelState("执行中")}>
+                开始执行并实时共创
+              </PrimaryBtn>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (taskPanelState === "执行中") {
+      return (
+        <div className="execution-live-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 16 }}>
+          <div style={{ display: "grid", gap: 12, background: "#F5F8FF", border: `1px solid ${C.blueBorder}`, borderRadius: 14, padding: 12 }}>
+            <div style={{ background: "#EAF1FF", border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ width: 8, height: 8, borderRadius: 999, background: C.blue, boxShadow: `0 0 0 4px rgba(37,99,235,0.12)` }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: C.blue }}>助手实时整理中...</span>
+              </div>
+              <div style={{ fontSize: 12, color: C.text1 }}>边执行，边整理，边更新理解</div>
+            </div>
+
+            <div className="task-state-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ background: "#FCFDFE", border: `1px solid ${C.greenBorder}`, borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>实时更新的建议动作</div>
+                {liveWorkspace.suggestedActions.map((item, index) => (
+                  <Row key={item} last={index === liveWorkspace.suggestedActions.length - 1} style={{ alignItems: "flex-start", padding: "8px 0" }}>
+                    <span style={{ color: C.green, fontWeight: 700, fontSize: 14 }}>+</span>
+                    <span style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{item}</span>
+                  </Row>
+                ))}
+              </div>
+
+              <div style={{ background: "#FCFDFE", border: `1px solid ${C.redBorder}`, borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>实时更新的受限事项</div>
+                {liveWorkspace.blockedItems.map((item, index) => (
+                  <Row key={item} last={index === liveWorkspace.blockedItems.length - 1} style={{ alignItems: "flex-start", padding: "8px 0" }}>
+                    <span style={{ color: C.red, fontWeight: 700, fontSize: 14 }}>✕</span>
+                    <span style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{item}</span>
+                  </Row>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ background: "#FCFDFE", border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>当前临时理解</div>
+              <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>{liveWorkspace.currentUnderstanding}</div>
+            </div>
+
+            <div className="task-state-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ background: "#FCFDFE", border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>待确认问题</div>
+                {liveWorkspace.questionsToConfirm.map((item, index) => (
+                  <Row key={item} last={index === liveWorkspace.questionsToConfirm.length - 1} style={{ alignItems: "flex-start", padding: "8px 0" }}>
+                    <span style={{ color: C.amber, fontWeight: 700, fontSize: 14 }}>?</span>
+                    <span style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{item}</span>
+                  </Row>
+                ))}
+              </div>
+
+              <div style={{ background: "#FCFDFE", border: `1px solid ${C.redBorder}`, borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>风险提醒</div>
+                {liveWorkspace.risks.map((item, index) => (
+                  <Row key={item} last={index === liveWorkspace.risks.length - 1} style={{ alignItems: "flex-start", padding: "8px 0" }}>
+                    <span style={{ color: C.red, fontWeight: 700, fontSize: 14 }}>!</span>
+                    <span style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{item}</span>
+                  </Row>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gap: 12 }}>
+            <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>文本输入区</div>
+              <div style={{ fontSize: 12.5, color: C.text1, marginBottom: 10 }}>输入客户第一手信息 / 访谈记录</div>
+              <textarea
+                value={executionInput}
+                onChange={(e) => {
+                  setExecutionInput(e.target.value);
+                  setDraftSaved(false);
+                }}
+                placeholder="记录客户原话、现场观察、配偶反馈、销售自己的即时判断……"
+                style={{
+                  width: "100%",
+                  border: `1.5px solid ${C.border}`,
+                  borderRadius: 8,
+                  background: C.surface,
+                  color: C.text0,
+                  fontSize: 13,
+                  padding: "10px 12px",
+                  resize: "vertical",
+                  minHeight: 120,
+                  outline: "none",
+                  fontFamily: C.sans,
+                }}
+              />
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+                <PrimaryBtn onClick={saveDraft}>提交</PrimaryBtn>
+                <SecondaryBtn onClick={() => setInputModalOpen(true)}>语音输入</SecondaryBtn>
+              </div>
+            </div>
+
+            <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>语音上传 / 转写入口</div>
+              <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.65, marginBottom: 10 }}>支持上传门店录音、现场纪要，转写后会继续回流到左侧理解区。</div>
+              <label
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  border: `1px dashed ${C.borderMd}`,
+                  borderRadius: 8,
+                  padding: "10px 12px",
+                  fontSize: 13,
+                  color: C.text1,
+                  background: C.surface,
+                  cursor: "pointer",
+                }}
+              >
+                <span>上传语音或转写文件</span>
+                <span style={{ color: C.blue, fontWeight: 600 }}>选择文件</span>
+                <input
+                  type="file"
+                  multiple
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    setSelectedFiles(Array.from(e.target.files ?? []).map((file) => file.name));
+                    setDraftSaved(false);
+                  }}
+                />
+              </label>
+            </div>
+
+            <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>图片 / 文件上传入口</div>
+              <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.65, marginBottom: 10 }}>上传访谈截图、手写记录、图片或其他文件，助手会继续归并进当前理解。</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <SecondaryBtn onClick={uploadMaterials}>上传到材料列表</SecondaryBtn>
+                {selectedFiles.length > 0 && <Tag label={`待上传 ${selectedFiles.length} 项`} variant="blue" small />}
+              </div>
+            </div>
+
+            <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>已上传材料列表</div>
+              <div style={{ display: "grid", gap: 2 }}>
+                {uploadedMaterials.map((item, index) => (
+                  <Row key={`${item.name}-${index}`} last={index === uploadedMaterials.length - 1}>
+                    <Tag label={item.type} variant={item.type === "照片" ? "blue" : "neutral"} small />
+                    <span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{item.name}</span>
+                    <span style={{ fontSize: 11.5, color: C.text2 }}>{item.time}</span>
+                  </Row>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -1306,7 +1972,8 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
             ))}
           </div>
           <div style={{ background: C.blueLight, border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: "12px 14px" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.blue, marginBottom: 10 }}>助手整理中...</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.blue, marginBottom: 6 }}>助手正在汇总本轮完整报告...</div>
+            <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.6, marginBottom: 10 }}>这一阶段只是在收束本轮结果，不是重新等待上传。已收集的执行材料会继续被合并成候选结论与报告草稿。</div>
             {processingSteps.map((step, index) => (
               <div key={step.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: index === processingSteps.length - 1 ? "8px 0 0" : "8px 0", borderBottom: index === processingSteps.length - 1 ? "none" : `1px solid ${C.blueBorder}` }}>
                 <span style={{ fontSize: 13, color: C.text0 }}>{step.label}</span>
@@ -1318,7 +1985,7 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
       );
     }
 
-    if (taskPanelState === "待审批") {
+    if (taskPanelState === "确认本轮结果") {
       return (
         <div style={{ display: "grid", gap: 14 }}>
           <div className="task-state-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 14 }}>
@@ -1399,16 +2066,34 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
       return null;
     }
 
-    if (taskPanelState === "整理中") {
-      return <SecondaryBtn onClick={() => setTaskPanelState("待执行")}>返回修改</SecondaryBtn>;
+    if (taskPanelState === "执行中") {
+      return (
+        <>
+          {draftSaved ? (
+            <SecondaryBtn onClick={resumeSupplement}>继续补充材料</SecondaryBtn>
+          ) : (
+            <SecondaryBtn onClick={saveDraft}>暂存草稿</SecondaryBtn>
+          )}
+          <PrimaryBtn onClick={generateRoundReport}>生成本轮完整报告</PrimaryBtn>
+        </>
+      );
     }
 
-    if (taskPanelState === "待审批") {
+    if (taskPanelState === "整理中") {
+      return (
+        <>
+          <SecondaryBtn onClick={() => setTaskPanelState("执行中")}>返回继续补充</SecondaryBtn>
+          <PrimaryBtn onClick={() => setTaskPanelState("确认本轮结果")}>查看本轮结果</PrimaryBtn>
+        </>
+      );
+    }
+
+    if (taskPanelState === "确认本轮结果") {
       return (
         <>
           <PrimaryBtn onClick={() => setTaskPanelState("已提交")}>审批并提交事件结果</PrimaryBtn>
           <SecondaryBtn onClick={() => setTaskPanelState("已提交")}>修改后提交</SecondaryBtn>
-          <DangerBtn onClick={() => setTaskPanelState("待执行")}>驳回分析结果</DangerBtn>
+          <DangerBtn onClick={() => setTaskPanelState("执行中")}>驳回并返回执行中</DangerBtn>
         </>
       );
     }
@@ -1425,7 +2110,7 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
   return (
     <div>
       <Header page="workspace" />
-      <div style={{ maxWidth: 1200, margin: "24px auto", padding: "0 28px" }}>
+      <div style={{ margin: "24px 0", padding: "0 28px" }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 12 }}>
           当前判断与当前任务
         </div>
@@ -1489,9 +2174,12 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
                   </div>
                   <div style={{ fontSize: 12.5, color: C.text2 }}>人机协作任务面板</div>
                 </div>
-                <Tag label={`当前状态：${taskPanelState}`} variant={taskPanelState === "待审批" ? "amber" : taskPanelState === "整理中" ? "blue" : "neutral"} />
+                <Tag
+                  label={`当前状态：${taskPanelState}`}
+                  variant={taskPanelState === "确认本轮结果" ? "amber" : taskPanelState === "执行中" || taskPanelState === "整理中" ? "blue" : "neutral"}
+                />
               </div>
-              {taskPanelState === "待审批" && (
+              {taskPanelState === "确认本轮结果" && (
                 <div style={{ background: C.blueLight, border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: "10px 12px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <div style={{ fontSize: 13, color: C.text1 }}>个人消息已推送“确认客户画像更新”，请在右上角消息中心处理。</div>
                   <SecondaryBtn onClick={onOpenMessages}>打开消息中心</SecondaryBtn>
@@ -1603,7 +2291,7 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 1200, margin: "0 auto 24px", padding: "0 28px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 24, margin: "0 0 24px", padding: "0 28px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase" }}>客户状态详情</div>
 
@@ -1794,12 +2482,11 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
           <div style={{ display: "flex", background: C.surfaceAlt, borderRadius: 10, padding: 4, border: `1px solid ${C.border}` }}>
             {[
               { id: "history", label: "客户触达任务历史" },
-              { id: "ownerTasks", label: "我负责的任务" },
               { id: "assignment", label: "责任协同详情" },
             ].map((item) => (
               <button
                 key={item.id}
-                onClick={() => setWorkTab(item.id as "history" | "ownerTasks" | "assignment")}
+                onClick={() => setWorkTab(item.id as "history" | "assignment")}
                 style={{
                   flex: 1,
                   padding: "8px 0",
@@ -1820,10 +2507,36 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
           {workTab === "history" && (
             <Card>
               <CardPad style={{ paddingBottom: 8 }}>
-                <SectionTitle>客户触达任务历史</SectionTitle>
-                {customer.events.map((event) => {
-                  const typeColor = { SALES_VISIT: C.blue, STATE_UPDATE: "#6D28D9", CS_OUTREACH: C.green }[event.type];
-                  const typeBg = { SALES_VISIT: C.blueLight, STATE_UPDATE: "#F5F3FF", CS_OUTREACH: C.greenLight }[event.type];
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+                  <SectionTitle>客户触达任务历史</SectionTitle>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <div style={{ fontSize: 12, color: C.text2 }}>责任人筛选</div>
+                    <div style={{ display: "flex", background: C.surfaceAlt, borderRadius: 8, padding: 4, border: `1px solid ${C.border}` }}>
+                      {historyOwnerOptions.map((owner) => (
+                        <button
+                          key={owner}
+                          onClick={() => setHistoryOwnerFilter(owner)}
+                          style={{
+                            padding: "6px 10px",
+                            borderRadius: 6,
+                            border: "none",
+                            background: historyOwnerFilter === owner ? C.surface : "transparent",
+                            color: historyOwnerFilter === owner ? C.text0 : C.text2,
+                            fontSize: 12,
+                            fontWeight: historyOwnerFilter === owner ? 600 : 400,
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {owner}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {historyEvents.map((event) => {
+                  const typeColor = { SALES_VISIT: C.blue, PRE_SALES: C.amber, CS_OUTREACH: C.green }[event.type];
+                  const typeBg = { SALES_VISIT: C.blueLight, PRE_SALES: C.amberLight, CS_OUTREACH: C.greenLight }[event.type];
 
                   return (
                     <div key={event.id} style={{ marginBottom: 12 }}>
@@ -1847,44 +2560,9 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
                     </div>
                   );
                 })}
-              </CardPad>
-            </Card>
-          )}
-          {workTab === "ownerTasks" && (
-            <Card>
-              <CardPad style={{ paddingBottom: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 8, flexWrap: "wrap" }}>
-                  <SectionTitle>我负责的任务</SectionTitle>
-                  <Tag label={`当前责任人：${customer.currentOwner}`} variant="blue" small />
-                </div>
-                {ownerEvents.length > 0 ? (
-                  ownerEvents.map((event) => {
-                    const typeColor = { SALES_VISIT: C.blue, STATE_UPDATE: "#6D28D9", CS_OUTREACH: C.green }[event.type];
-                    const typeBg = { SALES_VISIT: C.blueLight, STATE_UPDATE: "#F5F3FF", CS_OUTREACH: C.greenLight }[event.type];
-
-                    return (
-                      <div key={event.id} style={{ marginBottom: 12 }}>
-                        <Card style={{ borderLeft: `3px solid ${typeColor}` }}>
-                          <CardPad>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                                <span style={{ background: typeBg, color: typeColor, fontSize: 11, fontWeight: 600, padding: "2px 9px", borderRadius: 5 }}>
-                                  {event.typeLabel}
-                                </span>
-                                <span style={{ fontSize: 11.5, color: C.text2 }}>{event.id}</span>
-                              </div>
-                              <span style={{ fontSize: 11.5, color: C.text3 }}>{event.date}</span>
-                            </div>
-                            <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.65, marginBottom: 8 }}>{event.summary}</div>
-                            <div style={{ fontSize: 12, color: C.text2 }}>责任人：{event.owner}</div>
-                          </CardPad>
-                        </Card>
-                      </div>
-                    );
-                  })
-                ) : (
+                {historyEvents.length === 0 && (
                   <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 8, padding: "14px 16px", fontSize: 13, color: C.text2 }}>
-                    当前责任人暂无客户触达记录。
+                    当前筛选条件下暂无客户触达记录。
                   </div>
                 )}
               </CardPad>
@@ -2317,13 +2995,147 @@ function CSPage() {
   );
 }
 
+function GovernancePage() {
+  const g = stateGovernanceWorkbench;
+
+  return (
+    <div>
+      <Header page="governance" />
+      <div style={{ maxWidth: 1320, margin: "24px auto 40px", padding: "0 28px", display: "grid", gap: 22 }}>
+        <Card style={{ borderColor: C.borderMd }}>
+          <CardPad>
+            <div className="governance-top-grid" style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 18, alignItems: "start" }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>治理总览</div>
+                <div style={{ fontSize: 30, fontWeight: 700, color: C.text0, lineHeight: 1.1, marginBottom: 10 }}>状态治理台</div>
+                <div style={{ fontSize: 14, color: C.text1, lineHeight: 1.75, marginBottom: 14 }}>
+                  用于定义 Customer State 的结构、映射、审批边界与 owner 流转逻辑。这一页治理系统，不处理单个客户。
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <Tag label="高权限页面" variant="red" />
+                  <Tag label="系统逻辑治理" variant="blue" />
+                  <Tag label="最近 24 小时有变更" variant="amber" />
+                </div>
+              </div>
+              <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px" }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.7 }}>当前发布窗口</div>
+                <div style={{ display: "grid", gap: 10 }}>
+                  <div style={{ fontSize: 13, color: C.text1 }}>治理 owner：<strong style={{ color: C.text0 }}>Vicky</strong></div>
+                  <div style={{ fontSize: 13, color: C.text1 }}>默认审批链：<strong style={{ color: C.text0 }}>owner 审批 → manager review（高风险）</strong></div>
+                  <div style={{ fontSize: 13, color: C.text1 }}>最近生效时间：<strong style={{ color: C.text0 }}>2026-03-21 10:30</strong></div>
+                  <div style={{ fontSize: 13, color: C.text1 }}>变更状态：<Tag label="3 项待发布" variant="amber" small /></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="governance-summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginTop: 18 }}>
+              <GovernanceSummaryStat label="生效治理规则" value={g.summary.activeRulesCount} note="覆盖 State、页面结构、审批与流转。" />
+              <GovernanceSummaryStat label="待发布变更" value={g.summary.pendingChangesCount} note="进入发布队列，等待统一生效。" />
+              <GovernanceSummaryStat label="最近治理变更" value={g.summary.recentChangesCount} note="用于回溯规则演进与影响面。" />
+              <GovernanceSummaryStat label="受治理页面" value={g.summary.governedPagesCount} note="当前已纳入统一治理的业务页面数。" />
+            </div>
+          </CardPad>
+        </Card>
+
+        <Card>
+          <CardPad>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+              <SectionTitle>Block 1 · Customer State 维度配置</SectionTitle>
+              <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>新增维度</SecondaryBtn>
+            </div>
+            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8 }}>定义系统如何构造正式 Customer State，以及哪些维度进入版本沉淀、首屏展示与跨角色共享。</div>
+            {g.stateDimensions.map((item, index) => (
+              <DimensionRuleRow key={item.code} item={item} last={index === g.stateDimensions.length - 1} />
+            ))}
+          </CardPad>
+        </Card>
+
+        <Card>
+          <CardPad>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+              <SectionTitle>Block 2 · 工作台板块配置</SectionTitle>
+              <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>调整顺序</SecondaryBtn>
+            </div>
+            <div style={{ fontSize: 13, color: C.text2, marginBottom: 14 }}>说明不同页面如何消费同一套治理规则，包括板块顺序、首屏级别与折叠逻辑。</div>
+
+            <div className="governance-module-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+              {Object.values(g.workspaceModules).map((group) => (
+                <div key={group.name} style={{ border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", background: C.surfaceAlt }}>
+                  <div style={{ padding: "12px 14px", borderBottom: `1px solid ${C.border}`, background: C.surface }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text0 }}>{group.name}</div>
+                  </div>
+                  <div style={{ padding: "0 14px", background: C.surface }}>
+                    {group.modules.map((item, index) => (
+                      <ModuleConfigRow key={item.name} item={item} last={index === group.modules.length - 1} />
+                    ))}
+                  </div>
+                  <div style={{ padding: "12px 14px", borderTop: `1px solid ${C.border}`, background: C.surfaceAlt }}>
+                    <div style={{ fontSize: 11, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>板块开关</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {group.toggles.map((toggle) => (
+                        <div key={toggle.label} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+                          <span style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.6 }}>{toggle.label}</span>
+                          <GovernanceToggle enabled={toggle.enabled} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardPad>
+        </Card>
+
+        <Card>
+          <CardPad>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+              <SectionTitle>Block 3 · Agent 输出与审批规则</SectionTitle>
+              <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>新增规则</SecondaryBtn>
+            </div>
+            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8 }}>界定不同 agent 可以生成什么、能否直接写入，以及在哪些条件下必须 owner 或 manager 介入审批。</div>
+            {g.agentRules.map((item, index) => (
+              <AgentRuleRow key={item.agent} item={item} last={index === g.agentRules.length - 1} />
+            ))}
+          </CardPad>
+        </Card>
+
+        <Card>
+          <CardPad>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+              <SectionTitle>Block 4 · Owner 指派与流转规则</SectionTitle>
+              <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>模拟流转</SecondaryBtn>
+            </div>
+            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8 }}>解释 owner / route 为什么会这样流转，并明确自动切换、建议切换和必须 review 的边界。</div>
+            {g.ownershipRules.map((item, index) => (
+              <OwnershipRuleRow key={item.scenario} item={item} last={index === g.ownershipRules.length - 1} />
+            ))}
+          </CardPad>
+        </Card>
+
+        <Card>
+          <CardPad>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+              <SectionTitle>Block 5 · 治理变更记录</SectionTitle>
+              <SecondaryBtn style={{ padding: "7px 12px", fontSize: 12 }}>发布治理变更</SecondaryBtn>
+            </div>
+            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8 }}>用于追踪最近是谁改了什么、何时生效，以及影响了哪些页面、角色和 agent。</div>
+            {g.changeLog.map((item, index) => (
+              <GovernanceChangeRow key={`${item.effectiveAt}-${item.change}`} item={item} last={index === g.changeLog.length - 1} />
+            ))}
+          </CardPad>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [page, setPage] = useState<PageId>("myWorkbench");
   const [globalTaskState, setGlobalTaskState] = useState<TaskPanelState>("待执行");
   const [messagePanelOpen, setMessagePanelOpen] = useState(false);
-  const taskStateOptions: TaskPanelState[] = ["待执行", "整理中", "待审批", "已提交"];
+  const taskStateOptions: TaskPanelState[] = ["待执行", "执行中", "整理中", "确认本轮结果", "已提交"];
   const messages =
-    globalTaskState === "待审批"
+    globalTaskState === "确认本轮结果"
       ? [
           {
             id: "profile-update",
@@ -2339,6 +3151,7 @@ export default function App() {
     { id: "workspace", label: "客户状态工作台" },
     { id: "sales", label: "销售轻记录" },
     { id: "cs", label: "客服触达检查" },
+    { id: "governance", label: "状态治理台" },
   ];
 
   return (
@@ -2354,12 +3167,17 @@ export default function App() {
           .approval-item-row,
           .top-dual,
           .decision-tension-grid,
+          .governance-top-grid,
+          .governance-summary-grid,
+          .governance-module-grid,
+          .governance-row-grid,
           .detail-cards-grid,
           .two-col,
           .split-grid,
           .task-state-grid,
           .task-grid,
-          .mini-grid { grid-template-columns: 1fr !important; }
+          .mini-grid,
+          .execution-live-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -2567,6 +3385,7 @@ export default function App() {
       {page === "workspace" && <WorkspacePage taskPanelState={globalTaskState} setTaskPanelState={setGlobalTaskState} onOpenMessages={() => setMessagePanelOpen(true)} />}
       {page === "sales" && <SalesPage />}
       {page === "cs" && <CSPage />}
+      {page === "governance" && <GovernancePage />}
     </div>
   );
 }
