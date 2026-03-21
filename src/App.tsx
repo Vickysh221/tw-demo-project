@@ -1182,6 +1182,7 @@ function DangerBtn({ children, onClick, style = {} }: ButtonProps) {
 
 function getTaskStatusVariant(status: string): PillVariant {
   if (status.includes("执行中")) return "blue";
+  if (status.includes("待执行")) return "amber";
   if (status.includes("待审批") || status.includes("待更新")) return "amber";
   if (status.includes("完成")) return "green";
   return "neutral";
@@ -1534,7 +1535,7 @@ function MyWorkbenchPage({ onOpenWorkspace, onOpenApprovalDetail }: { onOpenWork
               </div>
             </div>
             <div className="workbench-summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 12 }}>
-              <SummaryStat label="待执行" value={myWorkbench.summary.todoCount} variant="neutral" />
+              <SummaryStat label="待执行" value={myWorkbench.summary.todoCount} variant="amber" />
               <SummaryStat label="执行中" value={myWorkbench.summary.inProgressCount} variant="blue" />
               <SummaryStat label="待审批" value={myWorkbench.summary.pendingApprovalCount} variant="amber" />
               <SummaryStat label="新分配" value={myWorkbench.summary.newAssignedCount} variant="amber" />
@@ -1560,9 +1561,9 @@ function MyWorkbenchPage({ onOpenWorkspace, onOpenApprovalDetail }: { onOpenWork
                     ? { bg: C.blueLight, border: C.blueBorder, tag: "blue" as const }
                     : group.key === "completed"
                       ? { bg: C.greenLight, border: C.greenBorder, tag: "green" as const }
-                      : group.key === "submitted"
+                    : group.key === "submitted"
                         ? { bg: C.amberLight, border: C.amberBorder, tag: "amber" as const }
-                        : { bg: C.surfaceAlt, border: C.border, tag: "neutral" as const };
+                        : { bg: "#FFF3EE", border: "#EFC6B8", tag: "amber" as const };
 
                 return (
                 <div key={group.key} style={{ border: `1px solid ${tone.border}`, borderRadius: 12, overflow: "hidden", background: C.surface }}>
@@ -3593,7 +3594,7 @@ function GovernancePage() {
   return (
     <div>
       <Header page="governance" />
-      <div style={{ maxWidth: 1320, margin: "24px auto 40px", padding: "0 28px", display: "grid", gap: 22 }}>
+      <div style={{ margin: "24px 0 40px", padding: "0 28px", display: "grid", gap: 22 }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: C.text2, letterSpacing: 0.9, textTransform: "uppercase" }}>顶部摘要</div>
         <Card style={{ borderColor: C.borderMd, overflow: "visible" }}>
           <CardPad>
