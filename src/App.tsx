@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
-type PageId = "myWorkbench" | "workspace" | "sales" | "cs" | "governance";
+type PageId = "myWorkbench" | "workspaceSales" | "workspaceCs" | "sales" | "cs" | "governance";
 type PillVariant = "green" | "blue" | "amber" | "red" | "neutral";
 type TagVariant = PillVariant | "purple";
 
@@ -40,6 +40,7 @@ type HeaderProps = {
 type ApprovalItem = (typeof myWorkbench.approvals)[number];
 
 type WorkspacePageProps = {
+  roleVariant: "sales" | "cs";
   taskPanelState: TaskPanelState;
   setTaskPanelState: (state: TaskPanelState) => void;
   onOpenMessages: () => void;
@@ -1624,14 +1625,15 @@ function MyWorkbenchPage({ onOpenWorkspace, onOpenApprovalDetail }: { onOpenWork
 function Header({ page }: HeaderProps) {
   const pageTitles: Record<PageId, string> = {
     myWorkbench: "我的工作台",
-    workspace: "客户状态工作台",
+    workspaceSales: "客户状态工作台",
+    workspaceCs: "客户状态工作台",
     sales: "销售轻记录",
     cs: "客服触达检查",
     governance: "智能体后台管理",
   };
   const summary = customer.summaryBlock;
 
-  if (page === "workspace" || page === "myWorkbench" || page === "governance") {
+  if (page === "workspaceSales" || page === "workspaceCs" || page === "myWorkbench" || page === "governance") {
     return (
       <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: "14px 28px" }}>
         <div style={{ fontSize: 11.5, color: C.text2, marginBottom: 4 }}>页面</div>
@@ -1713,7 +1715,7 @@ function Header({ page }: HeaderProps) {
   );
 }
 
-function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: WorkspacePageProps) {
+function WorkspacePage({ roleVariant, taskPanelState, setTaskPanelState, onOpenMessages }: WorkspacePageProps) {
   const [workTab, setWorkTab] = useState<"history" | "assignment">("history");
   const [historyOwnerFilter, setHistoryOwnerFilter] = useState<"全部" | "王芳" | "赵晨" | "李明">("全部");
   const [versionTraceExpanded, setVersionTraceExpanded] = useState(false);
@@ -1730,47 +1732,102 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
   ]);
   const summary = customer.summaryBlock;
   const stateDetail = customer.customerStateDetail;
-  const reviewPacket = {
-    rawSummary: "本次执行共采集 2 份材料，确认配偶愿意参与到店体验，核心关注点集中在品牌认知、家庭空间体验和预算上限。",
-    interpretation:
-      "销售视角判断：客户从个人高意向推进到家庭双人决策阶段，配偶已从隐性阻力转为可被触达的关键影响者。当前任务重点不是继续讲参数，而是组织一次面向双人决策的体验场景。",
-    candidateUpdates: [
-      "新增关注点：家庭空间与品牌认知联合评估",
-      "更新异议：配偶品牌偏好从推测升级为已确认阻力",
-      "更新决策张力：技术体验满意，但家庭品牌认知尚未收敛",
-    ],
-    confidence: 76,
-    unresolvedQuestions: ["配偶最在意的是品牌形象还是二手保值？", "是否需要销售经理提前参与邀约确认？"],
-    roleRecommendation: "先由王芳发出家庭体验邀约，再由李明补充售后与服务说明，避免直接进入价格谈判。",
-    versionRecommendation: "主要版本",
-    versionReason: "本次材料改变了决策结构判断，建议进入主要版本更新。",
-  } as const;
-  const processingSteps = [
-    { label: "正在整理原始记录", status: "已完成" },
-    { label: "正在提取候选状态更新", status: "进行中" },
-    { label: "正在生成销售视角分析", status: "等待中" },
-  ] as const;
-  const liveWorkspace = {
-    suggestedActions: [
-      "优先按“家庭体验 + 品牌对比”双线组织本轮沟通，不要直接切报价。",
-      "先把配偶顾虑拆成品牌认知、空间体验、预算三个维度，再决定是否需要经理介入。",
-      "如果客户能确认周末档期，下一步可同步准备家庭场景试驾路线与服务承诺材料。",
-    ],
-    blockedItems: ["仍不得直接联系配偶本人", "折扣承诺与金融方案口径不能先于审批给出", "售后响应时效不能口头扩大承诺"],
-    currentUnderstanding:
-      "当前任务已从单人高意向跟进切换为双人共同决策推动。客户本人在推进，配偶态度出现松动，但是否真正在意品牌形象、空间体验还是保值率，还需要继续收集一手表达。",
-    questionsToConfirm: ["配偶愿意参加的是到店体验还是单独看资料？", "客户预算上限是否因家庭讨论发生变化？", "这次补充信息里有没有明确提到竞品品牌？"],
-    risks: ["如果上传材料只堆事实、不补充背景，助手会误把配偶兴趣上升解读成异议消退。", "若现在直接生成完整报告，可能会把未验证判断写进本轮结论。"],
-  } as const;
-  const submittedHistoryEvent = {
-    id: "E-042",
-    type: "SALES_VISIT",
-    typeLabel: "销售拜访",
-    owner: customer.currentOwner,
-    date: "今天",
-    summary: "已提交本轮家庭体验邀约整理结果：确认客户愿意继续推进配偶共同体验，并补充了品牌对比、家庭空间体验与预算边界相关一线信息。",
-    status: "已提交",
-  } as const;
+  const workspaceTaskContent =
+    roleVariant === "sales"
+      ? {
+          currentTask: customer.currentTask,
+          reviewPacket: {
+            rawSummary: "本次执行共采集 2 份材料，确认配偶愿意参与到店体验，核心关注点集中在品牌认知、家庭空间体验和预算上限。",
+            interpretation:
+              "销售视角判断：客户从个人高意向推进到家庭双人决策阶段，配偶已从隐性阻力转为可被触达的关键影响者。当前任务重点不是继续讲参数，而是组织一次面向双人决策的体验场景。",
+            candidateUpdates: [
+              "新增关注点：家庭空间与品牌认知联合评估",
+              "更新异议：配偶品牌偏好从推测升级为已确认阻力",
+              "更新决策张力：技术体验满意，但家庭品牌认知尚未收敛",
+            ],
+            confidence: 76,
+            unresolvedQuestions: ["配偶最在意的是品牌形象还是二手保值？", "是否需要销售经理提前参与邀约确认？"],
+            roleRecommendation: "先由王芳发出家庭体验邀约，再由李明补充售后与服务说明，避免直接进入价格谈判。",
+            versionRecommendation: "主要版本",
+            versionReason: "本次材料改变了决策结构判断，建议进入主要版本更新。",
+          },
+          processingSteps: [
+            { label: "正在整理原始记录", status: "已完成" },
+            { label: "正在提取候选状态更新", status: "进行中" },
+            { label: "正在生成销售视角分析", status: "等待中" },
+          ],
+          liveWorkspace: {
+            suggestedActions: [
+              "优先按“家庭体验 + 品牌对比”双线组织本轮沟通，不要直接切报价。",
+              "先把配偶顾虑拆成品牌认知、空间体验、预算三个维度，再决定是否需要经理介入。",
+              "如果客户能确认周末档期，下一步可同步准备家庭场景试驾路线与服务承诺材料。",
+            ],
+            blockedItems: ["仍不得直接联系配偶本人", "折扣承诺与金融方案口径不能先于审批给出", "售后响应时效不能口头扩大承诺"],
+            currentUnderstanding:
+              "当前任务已从单人高意向跟进切换为双人共同决策推动。客户本人在推进，配偶态度出现松动，但是否真正在意品牌形象、空间体验还是保值率，还需要继续收集一手表达。",
+            questionsToConfirm: ["配偶愿意参加的是到店体验还是单独看资料？", "客户预算上限是否因家庭讨论发生变化？", "这次补充信息里有没有明确提到竞品品牌？"],
+          },
+          submittedHistoryEvent: {
+            id: "E-042",
+            type: "SALES_VISIT",
+            typeLabel: "销售拜访",
+            owner: customer.currentOwner,
+            date: "今天",
+            summary: "已提交本轮家庭体验邀约整理结果：确认客户愿意继续推进配偶共同体验，并补充了品牌对比、家庭空间体验与预算边界相关一线信息。",
+            status: "已提交",
+          },
+        }
+      : {
+          currentTask: {
+            ...customer.currentTask,
+            title: "推进客户服务回访与家庭体验协同确认",
+            why: "当前仍处于双人决策阶段，但客服更适合承接服务说明、回访跟进和体验协同确认，帮助销售继续推进。",
+            recommendedAction: "本周内由客服确认客户对服务承诺、家庭体验安排和后续响应方式的接受度，并把结果同步销售 owner。",
+            blockedActions: ["不得直接联系配偶本人", "不得承诺折扣与金融口径", "不得替销售直接推进成交结论"],
+            agentDraft: "「刘总，这边想先跟您确认一下家庭体验安排和售后服务说明，我们会把确认结果同步给销售同事，一起把后续安排衔接好。」",
+          },
+          reviewPacket: {
+            rawSummary: "本次执行共补充 2 份服务侧材料，核心聚焦在家庭体验安排确认、服务承诺说明和回访节奏是否合适。",
+            interpretation:
+              "客服视角判断：当前不宜主动推进成交，而应通过服务承诺说明与体验安排确认稳定关系温度，为销售后续承接提供清晰反馈。",
+            candidateUpdates: [
+              "新增关注点：客户对服务说明与体验衔接方式的接受度",
+              "更新协同建议：客服适合补充服务承诺说明并回传反馈",
+              "更新决策张力：家庭决策仍未完全收敛，需先稳住关系温度",
+            ],
+            confidence: 74,
+            unresolvedQuestions: ["客户更希望通过微信确认还是电话回访？", "是否需要由客服先发出服务承诺说明再交回销售？"],
+            roleRecommendation: "先由李明完成服务说明与回访确认，再把结果同步王芳，避免客服越权进入成交推进。",
+            versionRecommendation: "主要版本",
+            versionReason: "本次材料补充了服务协同信号，建议纳入主要版本更新供 owner 判断。",
+          },
+          processingSteps: [
+            { label: "正在整理服务回访记录", status: "已完成" },
+            { label: "正在提取客服协同建议", status: "进行中" },
+            { label: "正在生成客服视角分析", status: "等待中" },
+          ],
+          liveWorkspace: {
+            suggestedActions: [
+              "先确认客户更适合微信回访还是电话沟通，再安排服务说明发送节奏。",
+              "围绕家庭体验安排、服务承诺说明和响应方式三点收集反馈，不要直接进入成交推动。",
+              "确认结果后同步给销售 owner，由销售决定是否继续推进家庭到店体验。",
+            ],
+            blockedItems: ["仍不得直接联系配偶本人", "不得承诺折扣与金融政策", "不得替销售 owner 输出成交判断"],
+            currentUnderstanding:
+              "当前客服版本的任务重点是稳住关系温度，并通过服务说明和体验协同确认帮助销售继续推进，而不是直接承担成交推进职责。",
+            questionsToConfirm: ["客户更接受微信回访还是电话沟通？", "客户是否希望先收到服务承诺说明再确认家庭体验？", "客服回访结果是否需要当天同步给销售 owner？"],
+          },
+          submittedHistoryEvent: {
+            id: "E-042",
+            type: "CS_OUTREACH",
+            typeLabel: "客服回访",
+            owner: "李明",
+            date: "今天",
+            summary: "已提交本轮服务回访与家庭体验协同确认结果：确认客户愿意先接收服务说明，并等待销售继续承接家庭体验安排。",
+            status: "已提交",
+          },
+        } as const;
+  const { currentTask, reviewPacket, processingSteps, liveWorkspace, submittedHistoryEvent } = workspaceTaskContent;
   const historyEvents = (taskPanelState === "已提交" ? [submittedHistoryEvent, ...customer.events] : customer.events).filter(
     (event) => historyOwnerFilter === "全部" || event.owner === historyOwnerFilter,
   );
@@ -1832,25 +1889,25 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
         <div style={{ display: "grid", gap: 14 }}>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
             <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>任务标题</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: C.text0, marginBottom: 4 }}>{customer.currentTask.title}</div>
-            <div style={{ fontSize: 12.5, color: C.amber, fontWeight: 600, marginBottom: 8 }}>{customer.currentTask.timeWindow}</div>
-            <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.65 }}>{customer.currentTask.why}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: C.text0, marginBottom: 4 }}>{currentTask.title}</div>
+            <div style={{ fontSize: 12.5, color: C.amber, fontWeight: 600, marginBottom: 8 }}>{currentTask.timeWindow}</div>
+            <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.65 }}>{currentTask.why}</div>
           </div>
           <div className="task-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
             <div style={{ background: C.surface, border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "12px 14px" }}>
               <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>建议动作</div>
-              <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{customer.currentTask.recommendedAction}</div>
+              <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{currentTask.recommendedAction}</div>
             </div>
             <div style={{ background: C.surface, border: `1px solid ${C.redBorder}`, borderRadius: 10, padding: "12px 14px" }}>
               <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>受限事项</div>
-              {customer.currentTask.blockedActions.map((action) => (
+              {currentTask.blockedActions.map((action) => (
                 <div key={action} style={{ display: "flex", gap: 6, marginBottom: 5 }}>
                   <span style={{ color: C.red, fontWeight: 700, flexShrink: 0 }}>✕</span>
                   <span style={{ fontSize: 12, color: C.text1, lineHeight: 1.5 }}>{action}</span>
                 </div>
               ))}
             </div>
-            <AgentBlock text={customer.currentTask.agentDraft} label="话术建议" />
+            <AgentBlock text={currentTask.agentDraft} label="话术建议" />
           </div>
           <div style={{ background: C.surface, border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: "12px 14px", width: "100%" }}>
             <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>信息输入</div>
@@ -2099,7 +2156,9 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
             </div>
           </div>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
-            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>销售视角解读</div>
+            <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              {roleVariant === "sales" ? "销售视角解读" : "客服视角解读"}
+            </div>
             <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>{reviewPacket.interpretation}</div>
           </div>
           <div className="task-state-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 14 }}>
@@ -2147,7 +2206,9 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
         <div className="task-state-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
             <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>事件去向</div>
-            <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>事件已进入任务历史，等待销售与状态编排链路继续处理。</div>
+            <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>
+              {roleVariant === "sales" ? "事件已进入任务历史，等待销售与状态编排链路继续处理。" : "事件已进入任务历史，等待客服回访结果同步并交由编排链路继续处理。"}
+            </div>
           </div>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
             <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>下一步系统动作</div>
@@ -2206,7 +2267,7 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
 
   return (
     <div>
-      <Header page="workspace" />
+      <Header page={roleVariant === "sales" ? "workspaceSales" : "workspaceCs"} />
       <div style={{ margin: "24px 0", padding: "0 28px" }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: C.text2, letterSpacing: 0.9, textTransform: "uppercase", marginBottom: 12 }}>
           Layer 2 · 顶部摘要层
@@ -2265,7 +2326,7 @@ function WorkspacePage({ taskPanelState, setTaskPanelState, onOpenMessages }: Wo
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
                     <div style={{ fontSize: 11, fontWeight: 600, color: C.amber, letterSpacing: 0.8, textTransform: "uppercase" }}>负责人专属当前任务</div>
                     <Tag label="仅负责人可见" variant="amber" small />
-                    <Tag label={`时间窗口：${customer.currentTask.timeWindow}`} variant="neutral" small />
+                    <Tag label={`时间窗口：${currentTask.timeWindow}`} variant="neutral" small />
                   </div>
                   <div style={{ fontSize: 12.5, color: C.text2 }}>人机协作任务面板</div>
                 </div>
@@ -3871,7 +3932,8 @@ export default function App() {
       : [];
   const nav: Array<{ id: PageId; label: string }> = [
     { id: "myWorkbench", label: "我的工作台" },
-    { id: "workspace", label: "客户状态工作台" },
+    { id: "workspaceSales", label: "客户状态工作台" },
+    { id: "workspaceCs", label: "客户状态工作台" },
     { id: "sales", label: "销售轻记录" },
     { id: "cs", label: "客服触达检查" },
     { id: "governance", label: "智能体后台管理" },
@@ -3956,7 +4018,11 @@ export default function App() {
                 flexShrink: 0,
               }}
             >
-              {item.label}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <span>{item.label}</span>
+                {item.id === "workspaceSales" && <Tag label="销售版本" variant="blue" small />}
+                {item.id === "workspaceCs" && <Tag label="客服版本" variant="green" small />}
+              </span>
             </button>
           ))}
         </div>
@@ -4109,8 +4175,9 @@ export default function App() {
         </div>
       )}
 
-      {page === "myWorkbench" && <MyWorkbenchPage onOpenWorkspace={() => setPage("workspace")} onOpenApprovalDetail={openApprovalDetail} />}
-      {page === "workspace" && <WorkspacePage taskPanelState={globalTaskState} setTaskPanelState={setGlobalTaskState} onOpenMessages={() => setMessagePanelOpen(true)} />}
+      {page === "myWorkbench" && <MyWorkbenchPage onOpenWorkspace={() => setPage("workspaceSales")} onOpenApprovalDetail={openApprovalDetail} />}
+      {page === "workspaceSales" && <WorkspacePage roleVariant="sales" taskPanelState={globalTaskState} setTaskPanelState={setGlobalTaskState} onOpenMessages={() => setMessagePanelOpen(true)} />}
+      {page === "workspaceCs" && <WorkspacePage roleVariant="cs" taskPanelState={globalTaskState} setTaskPanelState={setGlobalTaskState} onOpenMessages={() => setMessagePanelOpen(true)} />}
       {page === "sales" && <SalesPage />}
       {page === "cs" && <CSPage />}
       {page === "governance" && <GovernancePage />}
