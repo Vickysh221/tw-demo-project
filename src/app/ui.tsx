@@ -31,7 +31,7 @@ export function Tag({ label, variant = "neutral", small = false }: TagProps) {
     purple: { color: "#6D5BD0", bg: "#F3F0FF", border: "#DDD6FE" },
   };
   const s = styles[variant];
-  return <span style={{ display: "inline-flex", alignItems: "center", padding: small ? "2px 8px" : "4px 10px", borderRadius: 999, border: `1px solid ${s.border}`, background: s.bg, color: s.color, fontSize: small ? 10.5 : 11.5, fontWeight: 600, whiteSpace: "nowrap" }}>{label}</span>;
+  return <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: small ? 32 : 38, padding: small ? "0 12px" : "0 16px", borderRadius: 12, border: `1px solid ${s.border}`, background: s.bg, color: s.color, fontSize: small ? 12 : 13, fontWeight: 600, whiteSpace: "nowrap" }}>{label}</span>;
 }
 
 export function SectionTitle({ children, style = {} }: SectionTitleProps) {
@@ -79,12 +79,13 @@ export function getPriorityTone(priority: "P0" | "P1" | "P2" | "P3") {
   return { bg: C.greenLight, border: C.greenBorder, color: C.green, tagBg: "#F2FAF5" };
 }
 
-export function PriorityCard({ priority, badgeLabel, title, children }: { priority: "P0" | "P1" | "P2" | "P3"; badgeLabel?: string; title: ReactNode; children?: ReactNode }) {
+export function PriorityCard({ priority, badgeLabel, badgeExtras, title, children }: { priority: "P0" | "P1" | "P2" | "P3"; badgeLabel?: string; badgeExtras?: ReactNode; title: ReactNode; children?: ReactNode }) {
   const tone = getPriorityTone(priority);
   return (
     <div style={{ background: tone.bg, border: `1px solid ${tone.border}`, borderRadius: 12, padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 44, height: 30, padding: "0 10px", border: `1px solid ${tone.border}`, background: tone.tagBg, color: tone.color, fontSize: 13, fontWeight: 500 }}>{badgeLabel ?? priority}</span>
+        {badgeExtras}
         <div style={{ fontSize: 20, color: C.text1, fontWeight: 600, lineHeight: 1.4, letterSpacing: 0.1 }}>{title}</div>
       </div>
       {children ? children : null}
@@ -97,12 +98,20 @@ export function DecisionTensionCard({ data, showManualControls = false, compact 
   const [actionOpen, setActionOpen] = useState(false);
   const [manualFlag, setManualFlag] = useState<"changed" | "incorrect" | null>(null);
   const balanceOffset = { left: "18%", center: "50%", right: "82%" }[data.balanceDirection];
+  const signalLabel = data.signalCount ?? data.evidenceEntryLabel;
+  const evidenceEntries = data.evidenceEntries ?? data.evidence;
+  const reviewActionLabels = {
+    toggleEvidence: data.reviewActions?.toggleEvidence ?? "查看证据来源",
+    collapseEvidence: data.reviewActions?.collapseEvidence ?? "收起证据来源",
+    markChanged: data.reviewActions?.markChanged ?? "标记张力已变化",
+    markIncorrect: data.reviewActions?.markIncorrect ?? "标记系统判断有误",
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: compact ? 12 : 14 }}>
       <div className="decision-tension-grid" style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 12, alignItems: "stretch" }}>
         <div style={{ border: `1px solid ${C.greenBorder}`, borderRadius: 12, background: C.greenLight, padding: compact ? "12px 14px" : "14px 16px" }}>
-          <div style={{ fontSize: 10.5, fontWeight: 700, color: C.green, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Left Force</div>
+          <div style={{ fontSize: 10.5, fontWeight: 700, color: C.green, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>{data.leftForceLabel ?? "Left Force"}</div>
           <div style={{ fontSize: 20, fontWeight: 700, color: C.text1, lineHeight: 1.4, marginBottom: 6 }}>{data.leftLabel}</div>
           <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7, marginBottom: 10 }}>{data.leftSummary}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
@@ -118,7 +127,7 @@ export function DecisionTensionCard({ data, showManualControls = false, compact 
           <div style={{ fontSize: 12, fontWeight: 800, color: C.text2, letterSpacing: 1.2 }}>VS</div>
         </div>
         <div style={{ border: `1px solid ${C.redBorder}`, borderRadius: 12, background: C.redLight, padding: compact ? "12px 14px" : "14px 16px" }}>
-          <div style={{ fontSize: 10.5, fontWeight: 700, color: C.red, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>Right Force</div>
+          <div style={{ fontSize: 10.5, fontWeight: 700, color: C.red, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 }}>{data.rightForceLabel ?? "Right Force"}</div>
           <div style={{ fontSize: 20, fontWeight: 700, color: C.text1, lineHeight: 1.4, marginBottom: 6 }}>{data.rightLabel}</div>
           <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7, marginBottom: 10 }}>{data.rightSummary}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
@@ -135,21 +144,21 @@ export function DecisionTensionCard({ data, showManualControls = false, compact 
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", marginBottom: 10, flexWrap: "wrap" }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 600, color: C.text2, marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5 }}>Tension Title</div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: C.text1 }}>{data.title}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: C.text1 }}>{data.tensionTitle ?? data.title}</div>
           </div>
-          <Tag label={data.evidenceEntryLabel} variant="amber" small />
+          <Tag label={signalLabel} variant="amber" small />
         </div>
         <div style={{ position: "relative", height: 38, marginBottom: 10 }}>
           <div style={{ position: "absolute", top: 18, left: 0, right: 0, height: 2, background: C.border, borderRadius: 999 }} />
           <div style={{ position: "absolute", top: 10, left: "50%", width: 1, height: 18, background: C.borderMd }} />
           <div style={{ position: "absolute", top: 0, left: balanceOffset, transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
             <div style={{ width: 14, height: 14, borderRadius: 999, background: C.amber, boxShadow: `0 0 0 3px ${C.amberLight}` }} />
-            <div style={{ fontSize: 11, color: "#92400E", fontWeight: 600 }}>当前偏向</div>
+            <div style={{ fontSize: 11, color: "#92400E", fontWeight: 600 }}>{data.currentBiasLabel ?? "当前偏向"}</div>
           </div>
         </div>
         <div style={{ fontSize: 13, color: "#92400E", lineHeight: 1.7, marginBottom: 12 }}>{data.currentBalance}</div>
         <button onClick={() => setActionOpen((prev) => !prev)} style={{ width: "100%", textAlign: "left", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 12px", cursor: "pointer", marginBottom: evidenceOpen || showManualControls || actionOpen ? 10 : 0 }}>
-          <div style={{ fontSize: 11, color: C.text2, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Why it matters</div>
+          <div style={{ fontSize: 11, color: C.text2, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>WHY IT MATTERS</div>
           <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.7 }}>{data.whyItMatters}</div>
         </button>
         {actionOpen && (
@@ -159,20 +168,20 @@ export function DecisionTensionCard({ data, showManualControls = false, compact 
           </div>
         )}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <SecondaryBtn onClick={() => setEvidenceOpen((prev) => !prev)} style={{ padding: "7px 12px", fontSize: 12 }}>{evidenceOpen ? "收起证据来源" : "查看证据来源"}</SecondaryBtn>
+          <SecondaryBtn onClick={() => setEvidenceOpen((prev) => !prev)} style={{ padding: "7px 12px", fontSize: 12 }}>{evidenceOpen ? reviewActionLabels.collapseEvidence : reviewActionLabels.toggleEvidence}</SecondaryBtn>
           {showManualControls && (
             <>
-              <SecondaryBtn onClick={() => setManualFlag("changed")} style={{ padding: "7px 12px", fontSize: 12 }}>标记张力已变化</SecondaryBtn>
-              <DangerBtn onClick={() => setManualFlag("incorrect")} style={{ padding: "7px 12px", fontSize: 12 }}>标记系统判断有误</DangerBtn>
+              <SecondaryBtn onClick={() => setManualFlag("changed")} style={{ padding: "7px 12px", fontSize: 12 }}>{reviewActionLabels.markChanged}</SecondaryBtn>
+              <DangerBtn onClick={() => setManualFlag("incorrect")} style={{ padding: "7px 12px", fontSize: 12 }}>{reviewActionLabels.markIncorrect}</DangerBtn>
             </>
           )}
         </div>
         {manualFlag && <div style={{ marginTop: 10, background: manualFlag === "incorrect" ? C.redLight : C.blueLight, border: `1px solid ${manualFlag === "incorrect" ? C.redBorder : C.blueBorder}`, borderRadius: 10, padding: "10px 12px", fontSize: 12.5, color: manualFlag === "incorrect" ? C.red : C.blue }}>{manualFlag === "changed" ? "已标记：当前张力已变化，建议重新评估下一步动作。" : "已标记：系统判断可能有误，需人工复核证据与状态更新。"}</div>}
         {evidenceOpen && (
           <div style={{ marginTop: 10, borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
-            <div style={{ fontSize: 11, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Evidence Entry</div>
-            {data.evidence.map((item, index) => (
-              <div key={item} title={item} style={{ padding: "8px 0", borderBottom: index === data.evidence.length - 1 ? "none" : `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 11, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>EVIDENCE ENTRY</div>
+            {evidenceEntries.map((item, index) => (
+              <div key={item} title={item} style={{ padding: "8px 0", borderBottom: index === evidenceEntries.length - 1 ? "none" : `1px solid ${C.border}` }}>
                 <div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.7 }}>{item}</div>
               </div>
             ))}

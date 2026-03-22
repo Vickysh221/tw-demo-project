@@ -37,6 +37,162 @@ function FeedbackWidget({ confidence }: { confidence: number }) {
   );
 }
 
+function TraitInsightTabs({
+  impact,
+  modelImplication,
+  evidenceSummary,
+}: {
+  impact: string;
+  modelImplication: readonly string[];
+  evidenceSummary: readonly string[];
+}) {
+  const [activeTab, setActiveTab] = useState<"impact" | "model" | "evidence">("impact");
+  const tabs = [
+    { id: "impact" as const, label: "对当前判断的影响" },
+    { id: "model" as const, label: "对 customer model 的含义" },
+    { id: "evidence" as const, label: "证据来源" },
+  ];
+
+  return (
+    <div style={{ display: "grid", gap: 10 }}>
+      <div style={{ display: "flex", background: C.surfaceAlt, borderRadius: 16, padding: 4, border: `1px solid ${C.border}`, gap: 4, flexWrap: "wrap" }}>
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              padding: "10px 16px",
+              borderRadius: 12,
+              border: activeTab === tab.id ? `1px solid ${C.border}` : "1px solid transparent",
+              background: activeTab === tab.id ? C.surface : "transparent",
+              color: activeTab === tab.id ? C.blue : C.text2,
+              fontSize: 12.5,
+              fontWeight: 600,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              transition: "all 0.15s",
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+        {activeTab === "impact" && (
+          <div>
+            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8, fontWeight: 600, letterSpacing: 0.1 }}>对当前判断的影响</div>
+            <div style={{ fontSize: 14.5, color: C.text1, lineHeight: 1.8, letterSpacing: 0.1 }}>{impact}</div>
+          </div>
+        )}
+        {activeTab === "model" && (
+          <div>
+            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8, fontWeight: 600 }}>对 customer model 的含义</div>
+            <div style={{ display: "grid", gap: 6 }}>
+              {modelImplication.map((item) => (
+                <div key={item} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <span style={{ color: C.text2, fontWeight: 700, fontSize: 14, lineHeight: 1.6 }}>•</span>
+                  <span style={{ fontSize: 13.5, color: C.text1, lineHeight: 1.75 }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {activeTab === "evidence" && (
+          <div>
+            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8, fontWeight: 600 }}>证据来源</div>
+            <div style={{ display: "grid", gap: 6 }}>
+              {evidenceSummary.map((item) => (
+                <div key={item} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <span style={{ color: C.text2, fontWeight: 700, fontSize: 14, lineHeight: 1.6 }}>•</span>
+                  <span style={{ fontSize: 13.5, color: C.text1, lineHeight: 1.75 }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ValidationItemTabs({
+  gapLabel,
+  gap,
+  judgmentImpact,
+  actionImpact,
+  verificationMethod,
+}: {
+  gapLabel: string;
+  gap: string;
+  judgmentImpact: string;
+  actionImpact: string;
+  verificationMethod: string;
+}) {
+  const [activeTab, setActiveTab] = useState<"gap" | "judgment" | "action" | "verification">("gap");
+  const tabs = [
+    { id: "gap" as const, label: gapLabel },
+    { id: "judgment" as const, label: "影响判断" },
+    { id: "action" as const, label: "对动作的影响" },
+    { id: "verification" as const, label: "建议补证方式" },
+  ];
+
+  return (
+    <div style={{ display: "grid", gap: 10 }}>
+      <div style={{ display: "flex", background: C.surfaceAlt, borderRadius: 16, padding: 4, border: `1px solid ${C.border}`, gap: 4, flexWrap: "wrap" }}>
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              padding: "10px 16px",
+              borderRadius: 12,
+              border: activeTab === tab.id ? `1px solid ${C.border}` : "1px solid transparent",
+              background: activeTab === tab.id ? C.surface : "transparent",
+              color: activeTab === tab.id ? C.blue : C.text2,
+              fontSize: 12.5,
+              fontWeight: 600,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              transition: "all 0.15s",
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+        {activeTab === "gap" && (
+          <div>
+            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8, fontWeight: 600 }}>{gapLabel}</div>
+            <div style={{ fontSize: 14, color: C.text1, lineHeight: 1.8, letterSpacing: 0.1 }}>{gap}</div>
+          </div>
+        )}
+        {activeTab === "judgment" && (
+          <div>
+            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8, fontWeight: 600 }}>影响判断</div>
+            <div style={{ fontSize: 14, color: C.text1, lineHeight: 1.8, letterSpacing: 0.1 }}>{judgmentImpact}</div>
+          </div>
+        )}
+        {activeTab === "action" && (
+          <div>
+            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8, fontWeight: 600 }}>对动作的影响</div>
+            <div style={{ fontSize: 14, color: C.text1, lineHeight: 1.8, letterSpacing: 0.1 }}>{actionImpact}</div>
+          </div>
+        )}
+        {activeTab === "verification" && (
+          <div>
+            <div style={{ fontSize: 13, color: C.text2, marginBottom: 8, fontWeight: 600 }}>建议补证方式</div>
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+              <span style={{ color: C.text2, fontWeight: 700, fontSize: 14, lineHeight: 1.6 }}>•</span>
+              <span style={{ fontSize: 14, color: C.text1, lineHeight: 1.8, letterSpacing: 0.1 }}>{verificationMethod}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 type DecisionEntryItem = {
   id: string;
   type: "action" | "decision";
@@ -457,6 +613,16 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
     alignItems: "stretch",
     alignSelf: "start",
   };
+  const renderTagSection = (title: string, items: readonly string[], variant: "blue" | "neutral" | "amber" = "neutral") => (
+    <div>
+      <div style={{ fontSize: 13, color: C.text2, marginBottom: 6, fontWeight: 600 }}>{title}</div>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        {items.map((item) => (
+          <Tag key={`${title}-${item}`} label={item} variant={variant} small />
+        ))}
+      </div>
+    </div>
+  );
   const renderDecisionPanel = (item: DecisionEntryItem, accent: { color: string; bg: string; border: string }) => (
     <div style={{ margin: "4px 0 8px 34px", border: `1px solid ${accent.border}`, borderRadius: 12, background: accent.bg, padding: "14px 16px", display: "grid", gap: 14 }}>
       <div>
@@ -994,10 +1160,10 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
           {taskPanelState !== "确认本轮结果" && renderLatestVersionSummaryCard(false)}
           <Card><CardPad><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}><SectionTitle style={detailSectionTitleStyle}>Customer State 摘要</SectionTitle><div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}><Tag label={`最新状态版本：${stateDetail.summary.stateVersion}`} variant="blue" small /><Tag label={`更新时间：${stateDetail.summary.updatedAt}`} variant="neutral" small /></div></div><div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 13, color: C.text2, marginBottom: 8, letterSpacing: 0.2 }}>当前摘要</div><div style={{ fontSize: 15, color: C.text0, lineHeight: 1.85, letterSpacing: 0.1 }}>{stateDetail.summary.summaryText}</div></div></CardPad></Card>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <Card><CardPad><SectionTitle style={detailSectionTitleStyle}>判断相关特征</SectionTitle><div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>{stateDetail.decisionRelevantTraits.map((trait, index) => { const priority = (["P0", "P1", "P2", "P3"] as const)[index % 4]; const tone = getPriorityTone(priority); const confidence = [85, 72, 68, 91][index % 4]; return <div key={trait.label} style={{ background: tone.bg, border: `1px solid ${tone.border}`, borderRadius: 12, padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 16, position: "relative" }}><div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}><div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", flex: 1 }}><span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 44, height: 30, padding: "0 10px", border: `1px solid ${tone.border}`, background: tone.tagBg, color: tone.color, fontSize: 13, fontWeight: 500 }}>{priority}</span><span style={{ display: "inline-flex", alignItems: "center", minHeight: 30, padding: "0 12px", border: `1px solid ${tone.border}`, background: tone.tagBg, color: tone.color, fontSize: 14, fontWeight: 600 }}>{trait.label}</span><div style={{ fontSize: 20, color: C.text1, fontWeight: 600, lineHeight: 1.4, letterSpacing: 0.1 }}>{trait.value}</div></div><FeedbackWidget confidence={confidence} /></div><div><div style={{ fontSize: 13, color: C.text2, marginBottom: 8, fontWeight: 600, letterSpacing: 0.1 }}>对当前判断的影响</div><div style={{ fontSize: 14.5, color: C.text1, lineHeight: 1.8, letterSpacing: 0.1 }}>{trait.impact}</div></div></div>; })}</div></CardPad></Card>
+            <Card><CardPad><SectionTitle style={detailSectionTitleStyle}>判断相关特征</SectionTitle><div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>{stateDetail.decisionRelevantTraits.map((trait, index) => { const priority = (["P0", "P1", "P2", "P3"] as const)[index % 4]; const tone = getPriorityTone(priority); const confidence = [85, 72, 68, 91][index % 4]; return <div key={trait.label} style={{ background: tone.bg, border: `1px solid ${tone.border}`, borderRadius: 12, padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 16, position: "relative" }}><div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}><div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", flex: 1 }}><span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 44, height: 30, padding: "0 10px", border: `1px solid ${tone.border}`, background: tone.tagBg, color: tone.color, fontSize: 13, fontWeight: 500 }}>{priority}</span><Tag label={trait.ontologyTypeLabel} variant="neutral" small /><Tag label={trait.stabilityLabel} variant={trait.stabilityLabel === "稳定" ? "green" : trait.stabilityLabel === "易变" ? "amber" : "neutral"} small /></div><FeedbackWidget confidence={confidence} /></div><div style={{ fontSize: 14.5, color: C.text1, fontWeight: 700, lineHeight: 1.5 }}>{trait.label}</div><div style={{ fontSize: 20, color: C.text1, fontWeight: 600, lineHeight: 1.4, letterSpacing: 0.1 }}>{trait.value}</div><TraitInsightTabs impact={trait.impact} modelImplication={trait.modelImplication} evidenceSummary={trait.evidenceSummary} />{renderTagSection("关联到", trait.relations.relatedTo, "blue")}{renderTagSection("影响", trait.relations.impacts, "neutral")}</div>; })}</div></CardPad></Card>
             <Card><CardPad><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}><SectionTitle style={detailSectionTitleStyle}>可行动</SectionTitle><Tag label={`${stateDetail.actionable.length} 条`} variant="green" small /></div><div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>{stateDetail.actionable.map((item, index) => <div key={item} style={{ position: "relative" }}><PriorityCard priority="P3" title={item} /><div style={{ position: "absolute", top: 10, right: 10 }}><FeedbackWidget confidence={[78, 82, 65, 88][index % 4]} /></div></div>)}</div></CardPad></Card>
             <Card style={{ borderColor: C.amberBorder }}><CardPad><div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}><SectionTitle style={detailSectionTitleStyle}>决策张力结构</SectionTitle><FeedbackWidget confidence={76} /></div><DecisionTensionCard data={stateDetail.tension} showManualControls /></CardPad></Card>
-            <Card style={{ gridColumn: "1 / -1" }}><CardPad><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}><SectionTitle style={detailSectionTitleStyle}>关键待验证项</SectionTitle><Tag label={`当前 ${stateDetail.keyValidationItems.length} 项`} variant="amber" small /></div><div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>{stateDetail.keyValidationItems.map((item, index) => { const normalizedPriority = item.priority === "P1" ? "P0" : "P1"; return <div key={item.title} style={{ position: "relative" }}><PriorityCard priority={normalizedPriority} badgeLabel={item.priority} title={item.title}><div style={{ display: "grid", gap: 10 }}><div><div style={{ fontSize: 13, color: C.text2, marginBottom: 5, fontWeight: 600 }}>当前缺口</div><div style={{ fontSize: 14, color: C.text1, lineHeight: 1.8, letterSpacing: 0.1 }}>{item.gap}</div></div><div><div style={{ fontSize: 13, color: C.text2, marginBottom: 5, fontWeight: 600 }}>影响判断</div><div style={{ fontSize: 14, color: C.text1, lineHeight: 1.8, letterSpacing: 0.1 }}>{item.affects}</div></div><div><div style={{ fontSize: 13, color: C.text2, marginBottom: 5, fontWeight: 600 }}>对动作的影响</div><div style={{ fontSize: 14, color: C.text1, lineHeight: 1.8, letterSpacing: 0.1 }}>{item.impact}</div></div></div><div style={{ marginTop: "auto", paddingTop: 4 }}><div style={{ fontSize: 13, color: C.text2, marginBottom: 6, fontWeight: 600 }}>建议补证方式</div><div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}><span style={{ color: getPriorityTone(normalizedPriority).color, fontWeight: 700, fontSize: 14 }}>•</span><span style={{ fontSize: 14, color: C.text0, lineHeight: 1.8, letterSpacing: 0.1 }}>{item.suggestion}</span></div></div></PriorityCard><div style={{ position: "absolute", top: 10, right: 10 }}><FeedbackWidget confidence={[70, 65, 80, 75][index % 4]} /></div></div>; })}</div></CardPad></Card>
+            <Card style={{ gridColumn: "1 / -1" }}><CardPad><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}><SectionTitle style={detailSectionTitleStyle}>关键待验证项</SectionTitle><Tag label={`当前 ${stateDetail.keyValidationItems.length} 项`} variant="amber" small /></div><div className="detail-cards-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>{stateDetail.keyValidationItems.map((item, index) => { const normalizedPriority = item.priority === "P1" ? "P0" : "P1"; const stabilityVariant = item.stabilityLabel === "部分验证" ? "amber" : item.stabilityLabel === "待验证" ? "neutral" : "green"; return <div key={item.title} style={{ position: "relative" }}><PriorityCard priority={normalizedPriority} badgeLabel={item.priority} badgeExtras={<Tag label={item.stabilityLabel} variant={stabilityVariant} small />} title={item.title}><div style={{ display: "grid", gap: 10 }}><ValidationItemTabs gapLabel={item.gapLabel} gap={item.gap} judgmentImpact={item.judgmentImpact} actionImpact={item.actionImpact} verificationMethod={item.verificationMethod} />{renderTagSection("关联对象", item.relatedTo, "blue")}</div></PriorityCard><div style={{ position: "absolute", top: 10, right: 10 }}><FeedbackWidget confidence={[70, 65, 80, 75][index % 4]} /></div></div>; })}</div></CardPad></Card>
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>

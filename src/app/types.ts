@@ -53,18 +53,30 @@ export type ButtonProps = {
 
 export type DecisionTensionData = {
   title: string;
+  tensionTitle?: string;
   leftLabel: string;
+  leftForceLabel?: string;
   leftSummary: string;
   leftForces: readonly string[];
   rightLabel: string;
+  rightForceLabel?: string;
   rightSummary: string;
   rightForces: readonly string[];
   currentBalance: string;
   balanceDirection: "left" | "right" | "center";
+  signalCount?: string;
+  currentBiasLabel?: string;
   whyItMatters: string;
   actionHint: string;
   evidenceEntryLabel: string;
   evidence: readonly string[];
+  evidenceEntries?: readonly string[];
+  reviewActions?: {
+    toggleEvidence?: string;
+    collapseEvidence?: string;
+    markChanged?: string;
+    markIncorrect?: string;
+  };
 };
 
 export interface ActionDecisionOption {
