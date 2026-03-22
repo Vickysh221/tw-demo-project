@@ -4,7 +4,7 @@ export type PageId = "myWorkbench" | "workspaceSales" | "workspaceCs" | "sales" 
 export type WorkspaceRoleVariant = "sales" | "cs";
 export type PillVariant = "green" | "blue" | "amber" | "red" | "neutral";
 export type TagVariant = PillVariant | "purple";
-export type TaskPanelState = "待执行" | "执行中" | "整理中" | "确认本轮结果" | "已提交";
+export type TaskPanelState = "待执行" | "执行中" | "整理中" | "确认本轮结果" | "无任务";
 
 export type StatusPillProps = {
   label: string;

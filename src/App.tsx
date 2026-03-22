@@ -10,7 +10,7 @@ import SalesPage from "./pages/SalesPage";
 import WorkspacePage from "./pages/WorkspacePage";
 import type { ApprovalItem } from "./pages/myWorkbenchParts";
 
-const taskStateOptions: TaskPanelState[] = ["待执行", "执行中", "整理中", "确认本轮结果", "已提交"];
+const taskStateOptions: TaskPanelState[] = ["待执行", "执行中", "整理中", "确认本轮结果", "无任务"];
 
 const nav: Array<{ id: PageId; label: string }> = [
   { id: "myWorkbench", label: "我的工作台" },
@@ -20,8 +20,8 @@ const nav: Array<{ id: PageId; label: string }> = [
 ];
 
 export default function App() {
-  const [page, setPage] = useState<PageId>("myWorkbench");
-  const [globalTaskState, setGlobalTaskState] = useState<TaskPanelState>("待执行");
+  const [page, setPage] = useState<PageId>("workspaceSales");
+  const [globalTaskState, setGlobalTaskState] = useState<TaskPanelState>("无任务");
   const [messagePanelOpen, setMessagePanelOpen] = useState(false);
 
   const openApprovalDetail = (item: ApprovalItem) => {
@@ -163,10 +163,15 @@ export default function App() {
               height: 38,
               cursor: "pointer",
               color: C.text1,
-              fontSize: 15,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            信
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+            </svg>
             {messages.length > 0 && (
               <span
                 style={{
@@ -268,7 +273,7 @@ export default function App() {
                       <DecisionTensionCard data={profileUpdatePacket.tension} compact />
                     </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <PrimaryBtn onClick={() => setGlobalTaskState("已提交")}>确认状态更新</PrimaryBtn>
+                      <PrimaryBtn onClick={() => setGlobalTaskState("无任务")}>确认状态更新</PrimaryBtn>
                       <SecondaryBtn>修改</SecondaryBtn>
                     </div>
                   </div>

@@ -75,7 +75,7 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
           submittedHistoryEvent: { id: "E-042", type: "CS_OUTREACH", typeLabel: "客服回访", owner: "李明", date: "今天", summary: "已提交本轮服务回访与家庭体验协同确认结果：确认客户愿意先接收服务说明，并等待销售继续承接家庭体验安排。", status: "已提交" },
         } as const;
   const { currentTask, reviewPacket, processingSteps, liveWorkspace, submittedHistoryEvent } = workspaceTaskContent;
-  const historyEvents = (taskPanelState === "已提交" ? [submittedHistoryEvent, ...customer.events] : customer.events).filter((event) => historyOwnerFilter === "全部" || event.owner === historyOwnerFilter);
+  const historyEvents = (taskPanelState === "无任务" ? [submittedHistoryEvent, ...customer.events] : customer.events).filter((event) => historyOwnerFilter === "全部" || event.owner === historyOwnerFilter);
   const historyOwnerOptions = ["全部", "王芳", "赵晨", "李明"] as const;
   const latestStateVersion = customer.stateVersions[0];
   const latestVersionNewItems =
@@ -118,8 +118,8 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
   const purple = { color: "#6D5BD0", bg: "#F3F0FF", border: "#DDD6FE" } as const;
   const renderApprovalActions = () => (
     <>
-      <PrimaryBtn onClick={() => setTaskPanelState("已提交")}>审批并提交</PrimaryBtn>
-      <SecondaryBtn onClick={() => setTaskPanelState("已提交")}>修改后提交</SecondaryBtn>
+      <PrimaryBtn onClick={() => setTaskPanelState("无任务")}>审批并提交</PrimaryBtn>
+      <SecondaryBtn onClick={() => setTaskPanelState("无任务")}>修改后提交</SecondaryBtn>
       <DangerBtn onClick={() => setTaskPanelState("执行中")}>驳回并返回执行中</DangerBtn>
     </>
   );
@@ -423,7 +423,7 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
           {renderTopAssignmentCard()}
         </div>
         <div className="top-dual" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24, marginBottom: 24 }}>
-          {taskPanelState !== "已提交" && <Card style={{ background: C.surface, borderColor: C.border }}><CardPad><div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 12 }}><div><div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}><div style={{ fontSize: 11, fontWeight: 600, color: C.amber, letterSpacing: 0.8, textTransform: "uppercase" }}>负责人专属当前任务</div><Tag label="仅负责人可见" variant="amber" small /><Tag label={`时间窗口：${currentTask.timeWindow}`} variant="neutral" small /></div><div style={{ fontSize: 12.5, color: C.text2 }}>人机协作任务面板</div></div><Tag label={`当前状态：${taskPanelState}`} variant={taskPanelState === "确认本轮结果" ? "amber" : taskPanelState === "执行中" || taskPanelState === "整理中" ? "blue" : "neutral"} /></div>{renderTaskStateBody()}<div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>{renderTaskStateActions()}</div></CardPad></Card>}
+          {taskPanelState !== "无任务" && <Card style={{ background: C.surface, borderColor: "#E8B4B4", borderWidth: 4 }}><CardPad><div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 12 }}><div><div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}><div style={{ fontSize: 11, fontWeight: 600, color: C.amber, letterSpacing: 0.8, textTransform: "uppercase" }}>负责人专属当前任务</div><Tag label="仅负责人可见" variant="amber" small /><Tag label={`时间窗口：${currentTask.timeWindow}`} variant="neutral" small /></div><div style={{ fontSize: 12.5, color: C.text2 }}>人机协作任务面板</div></div><Tag label={`当前状态：${taskPanelState}`} variant={taskPanelState === "确认本轮结果" ? "amber" : taskPanelState === "执行中" || taskPanelState === "整理中" ? "blue" : "neutral"} /></div>{renderTaskStateBody()}<div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>{renderTaskStateActions()}</div></CardPad></Card>}
         </div>
         <div style={{ fontSize: 12, fontWeight: 600, color: C.text2, letterSpacing: 0.9, textTransform: "uppercase", marginBottom: 12 }}>Layer 3 · 主体工作层</div>
       </div>
