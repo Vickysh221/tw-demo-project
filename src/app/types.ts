@@ -112,3 +112,18 @@ export interface ActionRecommendationItem {
     liked?: boolean | null;
   };
 }
+
+export interface ActionCardEvidenceRef {
+  type: "call" | "chat" | "crm" | "event";
+  title: string;
+  timestamp?: string;
+}
+
+export interface ActionCard {
+  id: string;
+  priority: "P1" | "P2" | "P3";
+  title: string;
+  confidence: number;
+  explanation_summary?: string[];
+  evidence_refs?: ActionCardEvidenceRef[];
+}

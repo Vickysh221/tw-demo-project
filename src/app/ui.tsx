@@ -79,10 +79,10 @@ export function getPriorityTone(priority: "P0" | "P1" | "P2" | "P3") {
   return { bg: C.greenLight, border: C.greenBorder, color: C.green, tagBg: "#F2FAF5" };
 }
 
-export function PriorityCard({ priority, badgeLabel, badgeExtras, title, children }: { priority: "P0" | "P1" | "P2" | "P3"; badgeLabel?: string; badgeExtras?: ReactNode; title: ReactNode; children?: ReactNode }) {
+export function PriorityCard({ priority, badgeLabel, badgeExtras, title, children, style = {} }: { priority: "P0" | "P1" | "P2" | "P3"; badgeLabel?: string; badgeExtras?: ReactNode; title: ReactNode; children?: ReactNode; style?: CSSProperties }) {
   const tone = getPriorityTone(priority);
   return (
-    <div style={{ background: tone.bg, border: `1px solid ${tone.border}`, borderRadius: 12, padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ background: tone.bg, border: `1px solid ${tone.border}`, borderRadius: 12, padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 16, ...style }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 44, height: 30, padding: "0 10px", border: `1px solid ${tone.border}`, background: tone.tagBg, color: tone.color, fontSize: 13, fontWeight: 500 }}>{badgeLabel ?? priority}</span>
         {badgeExtras}

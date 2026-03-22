@@ -1,4 +1,4 @@
-import type { DecisionTensionData } from "./types";
+import type { ActionCard, DecisionTensionData } from "./types";
 
 export const customer = {
   name: "刘浩",
@@ -89,11 +89,39 @@ export const customer = {
       },
     ],
     actionable: [
-      "当前处于深度意向期，仍有继续推进的业务价值。",
-      "智能驾驶体验是主要吸引点，可作为家庭体验邀约的切入口。",
-      "当前 owner 仍应由销售主导，客服与售前提供材料支持即可。",
-      "下一步更适合推进家庭体验邀约，而不是直接进入成交推进或价格逼单。",
-    ],
+      {
+        id: "card_001",
+        priority: "P3",
+        title: "当前处于深度意向期，仍有继续推进的业务价值",
+        confidence: 78,
+        explanation_summary: ["近7天沟通频率提升", "客户多次提及家庭使用场景", "未出现明显价格抗拒"],
+        evidence_refs: [{ type: "call", title: "3/18 电话沟通记录", timestamp: "2026-03-18" }, { type: "event", title: "3/19 试驾反馈：提及家人体验", timestamp: "2026-03-19" }, { type: "crm", title: "标签：家庭用户 / 高配置关注" }],
+      },
+      {
+        id: "card_002",
+        priority: "P3",
+        title: "智能驾驶体验是主要吸引点，可作为家庭体验邀约的切入口",
+        confidence: 82,
+        explanation_summary: ["客户对辅助驾驶体验反馈持续正向", "技术体验是当前最强差异点"],
+        evidence_refs: [{ type: "event", title: "第二次试驾反馈：辅助驾驶体验满意", timestamp: "2026-03-19" }, { type: "crm", title: "标签：智能驾驶高关注" }],
+      },
+      {
+        id: "card_003",
+        priority: "P3",
+        title: "当前 owner 仍应由销售主导，客服与售前提供材料支持即可",
+        confidence: 65,
+        explanation_summary: ["成交推进仍处于销售主链路", "客服与售前当前更适合提供补充证据"],
+        evidence_refs: [{ type: "crm", title: "当前 owner：销售", timestamp: "2026-03-20" }, { type: "event", title: "协同建议：客服与售前提供支持材料" }],
+      },
+      {
+        id: "card_004",
+        priority: "P3",
+        title: "下一步更适合推进家庭体验邀约，而不是直接进入成交推进或价格逼单",
+        confidence: 88,
+        explanation_summary: ["配偶仍未直接表达真实顾虑", "先做家庭体验更能降低决策摩擦"],
+        evidence_refs: [{ type: "call", title: "客户表示希望先看家庭空间体验", timestamp: "2026-03-18" }, { type: "event", title: "当前建议动作：先推进家庭体验邀约" }],
+      },
+    ] satisfies readonly ActionCard[],
     keyValidationItems: [
       {
         priority: "P1",
