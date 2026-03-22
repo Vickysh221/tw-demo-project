@@ -96,7 +96,6 @@ export function PriorityCard({ priority, badgeLabel, badgeExtras, title, childre
 export function DecisionTensionCard({ data, showManualControls = false, compact = false }: { data: DecisionTensionData; showManualControls?: boolean; compact?: boolean }) {
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [actionOpen, setActionOpen] = useState(false);
-  const [manualFlag, setManualFlag] = useState<"changed" | "incorrect" | null>(null);
   const balanceOffset = { left: "18%", center: "50%", right: "82%" }[data.balanceDirection];
   const signalLabel = data.signalCount ?? data.evidenceEntryLabel;
   const evidenceEntries = data.evidenceEntries ?? data.evidence;
@@ -169,14 +168,7 @@ export function DecisionTensionCard({ data, showManualControls = false, compact 
         )}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <SecondaryBtn onClick={() => setEvidenceOpen((prev) => !prev)} style={{ padding: "7px 12px", fontSize: 12 }}>{evidenceOpen ? reviewActionLabels.collapseEvidence : reviewActionLabels.toggleEvidence}</SecondaryBtn>
-          {showManualControls && (
-            <>
-              <SecondaryBtn onClick={() => setManualFlag("changed")} style={{ padding: "7px 12px", fontSize: 12 }}>{reviewActionLabels.markChanged}</SecondaryBtn>
-              <DangerBtn onClick={() => setManualFlag("incorrect")} style={{ padding: "7px 12px", fontSize: 12 }}>{reviewActionLabels.markIncorrect}</DangerBtn>
-            </>
-          )}
         </div>
-        {manualFlag && <div style={{ marginTop: 10, background: manualFlag === "incorrect" ? C.redLight : C.blueLight, border: `1px solid ${manualFlag === "incorrect" ? C.redBorder : C.blueBorder}`, borderRadius: 10, padding: "10px 12px", fontSize: 12.5, color: manualFlag === "incorrect" ? C.red : C.blue }}>{manualFlag === "changed" ? "已标记：当前张力已变化，建议重新评估下一步动作。" : "已标记：系统判断可能有误，需人工复核证据与状态更新。"}</div>}
         {evidenceOpen && (
           <div style={{ marginTop: 10, borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
             <div style={{ fontSize: 11, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>EVIDENCE ENTRY</div>

@@ -78,7 +78,7 @@ export default function ActionRecommendationList({
     () => Object.fromEntries(items.map((item) => [item.id, item.feedback?.liked ?? null])),
     [items],
   );
-  const [expandedId, setExpandedId] = useState<string | null>(items[0]?.id ?? null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedDecisions, setSelectedDecisions] = useState<Record<string, string>>({});
   const [decisionOtherOpen, setDecisionOtherOpen] = useState<Record<string, boolean>>({});
   const [otherDecisionDrafts, setOtherDecisionDrafts] = useState<Record<string, string>>({});

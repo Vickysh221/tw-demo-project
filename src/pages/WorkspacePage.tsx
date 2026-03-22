@@ -331,7 +331,7 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
   const [inputModalOpen, setInputModalOpen] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
   const assignmentSectionRef = useRef<HTMLDivElement | null>(null);
-  const [openQuestionId, setOpenQuestionId] = useState<string | null>(roleVariant === "sales" ? "sales-question-1" : "cs-question-1");
+  const [openQuestionId, setOpenQuestionId] = useState<string | null>(null);
   const [decisionSelections, setDecisionSelections] = useState<Record<string, string>>({});
   const [questionDecisionOtherOpen, setQuestionDecisionOtherOpen] = useState<Record<string, boolean>>({});
   const [otherQuestionDecisionDrafts, setOtherQuestionDecisionDrafts] = useState<Record<string, string>>({});
@@ -796,15 +796,6 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
         </div>}
       </div>
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
-        {(() => {
-          const confirmationState = getQuestionConfirmationState(item.id);
-          return (
-            <div style={{ background: confirmationState.tone.bg, border: `1px solid ${confirmationState.tone.border}`, borderRadius: 10, padding: "10px 12px", marginBottom: 10, display: "grid", gap: 4 }}>
-              <div style={{ fontSize: 12.5, color: confirmationState.tone.color, fontWeight: 700 }}>状态：{confirmationState.label}</div>
-              {confirmationState.result && <div style={{ fontSize: 12.5, color: C.text0, fontWeight: 600 }}>判断结果：{confirmationState.result}</div>}
-            </div>
-          );
-        })()}
         <div style={{ fontSize: 11, color: C.text2, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>执行结果</div>
         {item.executionMeta && <div style={{ fontSize: 12, color: C.text2, marginBottom: 8 }}>{item.executionMeta}</div>}
         <div style={{ fontSize: 12, color: C.text2, marginBottom: 8, fontWeight: 600 }}>候选判断（待确认）</div>
@@ -897,6 +888,15 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
             )}
           </div>
         </div>}
+        {(() => {
+          const confirmationState = getQuestionConfirmationState(item.id);
+          return (
+            <div style={{ background: confirmationState.tone.bg, border: `1px solid ${confirmationState.tone.border}`, borderRadius: 10, padding: "10px 12px", marginTop: 10, display: "grid", gap: 4 }}>
+              <div style={{ fontSize: 12.5, color: confirmationState.tone.color, fontWeight: 700 }}>状态：{confirmationState.label}</div>
+              {confirmationState.result && <div style={{ fontSize: 12.5, color: C.text0, fontWeight: 600 }}>判断结果：{confirmationState.result}</div>}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
@@ -1103,7 +1103,6 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
                 <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>{liveWorkspace.currentUnderstanding}</div>
               </div>
             </div>
-            <ActionRecommendationList items={actionRecommendations} />
             <div>
               <div style={{ background: "#FCFDFE", border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "12px 14px" }}>
                 <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>待确认问题</div>
@@ -1127,6 +1126,7 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
                 })}
               </div>
             </div>
+            <ActionRecommendationList items={actionRecommendations} />
           </div>
           <div style={{ display: "grid", gap: 12, alignSelf: "start", height: "fit-content" }}>
             <div style={rightColumnPanelStyle}>
