@@ -446,6 +446,17 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
     };
   };
   const accentGreen = { color: C.green, bg: C.greenLight, border: C.greenBorder };
+  const rightColumnPanelStyle: CSSProperties = {
+    background: C.surfaceAlt,
+    border: `1px solid ${C.border}`,
+    borderRadius: 10,
+    padding: "12px 14px",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "flex-start",
+    alignItems: "stretch",
+    alignSelf: "start",
+  };
   const renderDecisionPanel = (item: DecisionEntryItem, accent: { color: string; bg: string; border: string }) => (
     <div style={{ margin: "4px 0 8px 34px", border: `1px solid ${accent.border}`, borderRadius: 12, background: accent.bg, padding: "14px 16px", display: "grid", gap: 14 }}>
       <div>
@@ -845,7 +856,7 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
     }
     if (taskPanelState === "执行中") {
       return (
-        <div className="execution-live-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 16 }}>
+        <div className="execution-live-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 16, alignItems: "start" }}>
           <div style={{ display: "grid", gap: 12, background: "#F5F8FF", border: `1px solid ${C.blueBorder}`, borderRadius: 14, padding: 12 }}>
             <div style={{ background: "#EAF1FF", border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ width: 8, height: 8, borderRadius: 999, background: C.blue, boxShadow: `0 0 0 3px ${C.blueLight}` }} /><span style={{ fontSize: 13, fontWeight: 700, color: C.blue }}>助手实时整理中...</span></div>
@@ -886,14 +897,14 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
               </div>
             </div>
           </div>
-          <div style={{ display: "grid", gap: 12 }}>
-            <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+          <div style={{ display: "grid", gap: 12, alignSelf: "start", height: "fit-content" }}>
+            <div style={rightColumnPanelStyle}>
               <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>文本输入区</div>
               <div style={{ fontSize: 12.5, color: C.text1, marginBottom: 10 }}>输入客户第一手信息 / 访谈记录</div>
               <textarea value={executionInput} onChange={(e) => { setExecutionInput(e.target.value); setDraftSaved(false); }} placeholder="记录客户原话、现场观察、配偶反馈、销售自己的即时判断……" style={{ width: "100%", border: `1.5px solid ${C.border}`, borderRadius: 8, background: C.surface, color: C.text0, fontSize: 13, padding: "10px 12px", resize: "vertical", minHeight: 120, outline: "none", fontFamily: C.sans }} />
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}><PrimaryBtn onClick={saveDraft}>提交</PrimaryBtn><SecondaryBtn onClick={() => setInputModalOpen(true)}>语音输入</SecondaryBtn></div>
             </div>
-            <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={rightColumnPanelStyle}>
               <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>语音上传 / 转写入口</div>
               <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.65, marginBottom: 10 }}>支持上传门店录音、现场纪要，转写后会继续回流到左侧理解区。</div>
               <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: `1px dashed ${C.borderMd}`, borderRadius: 8, padding: "10px 12px", fontSize: 13, color: C.text1, background: C.surface, cursor: "pointer" }}>
@@ -901,12 +912,12 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
                 <input type="file" multiple style={{ display: "none" }} onChange={(e) => { setSelectedFiles(Array.from(e.target.files ?? []).map((file) => file.name)); setDraftSaved(false); }} />
               </label>
             </div>
-            <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={rightColumnPanelStyle}>
               <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>图片 / 文件上传入口</div>
               <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.65, marginBottom: 10 }}>上传访谈截图、手写记录、图片或其他文件，助手会继续归并进当前理解。</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}><SecondaryBtn onClick={uploadMaterials}>上传到材料列表</SecondaryBtn>{selectedFiles.length > 0 && <Tag label={`待上传 ${selectedFiles.length} 项`} variant="blue" small />}</div>
             </div>
-            <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={rightColumnPanelStyle}>
               <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>已上传材料列表</div>
               <div style={{ display: "grid", gap: 2 }}>{uploadedMaterials.map((item, index) => <Row key={`${item.name}-${index}`} last={index === uploadedMaterials.length - 1}><Tag label={item.type} variant={item.type === "照片" ? "blue" : "neutral"} small /><span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{item.name}</span><span style={{ fontSize: 11.5, color: C.text2 }}>{item.time}</span></Row>)}</div>
             </div>
@@ -915,7 +926,7 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
       );
     }
     if (taskPanelState === "整理中") {
-      return <div style={{ display: "grid", gap: 14 }}><div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}><div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>已上传材料清单</div>{uploadedMaterials.map((item, index) => <Row key={`${item.name}-${index}`} last={index === uploadedMaterials.length - 1}><Tag label={item.type} variant={item.type === "照片" ? "blue" : "neutral"} small /><span style={{ fontSize: 13, color: C.text0, flex: 1 }}>{item.name}</span><span style={{ fontSize: 11.5, color: C.text2 }}>{item.time}</span></Row>)}</div><div style={{ background: C.blueLight, border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: "12px 14px" }}><div style={{ fontSize: 13, fontWeight: 700, color: C.blue, marginBottom: 6 }}>助手正在汇总本轮完整报告...</div><div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.6, marginBottom: 10 }}>这一阶段只是在收束本轮结果，不是重新等待上传。已收集的执行材料会继续被合并成候选结论与报告草稿。</div>{processingSteps.map((step, index) => <div key={step.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: index === processingSteps.length - 1 ? "8px 0 0" : "8px 0", borderBottom: index === processingSteps.length - 1 ? "none" : `1px solid ${C.blueBorder}` }}><span style={{ fontSize: 13, color: C.text0 }}>{step.label}</span><Tag label={step.status} variant={step.status === "已完成" ? "green" : step.status === "进行中" ? "blue" : "neutral"} small /></div>)}</div></div>;
+      return <div style={{ display: "grid", gap: 14 }}><div style={{ background: C.blueLight, border: `1px solid ${C.blueBorder}`, borderRadius: 10, padding: "12px 14px" }}><div style={{ fontSize: 13, fontWeight: 700, color: C.blue, marginBottom: 6 }}>助手正在汇总本轮完整报告...</div><div style={{ fontSize: 12.5, color: C.text1, lineHeight: 1.6, marginBottom: 10 }}>这一阶段只是在收束本轮结果，不是重新等待上传。已收集的执行材料会继续被合并成候选结论与报告草稿。</div>{processingSteps.map((step, index) => <div key={step.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: index === processingSteps.length - 1 ? "8px 0 0" : "8px 0", borderBottom: index === processingSteps.length - 1 ? "none" : `1px solid ${C.blueBorder}` }}><span style={{ fontSize: 13, color: C.text0 }}>{step.label}</span><Tag label={step.status} variant={step.status === "已完成" ? "green" : step.status === "进行中" ? "blue" : "neutral"} small /></div>)}</div></div>;
     }
     if (taskPanelState === "确认本轮结果") {
       return (
