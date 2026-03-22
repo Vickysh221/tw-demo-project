@@ -35,18 +35,42 @@ function FeedbackWidget({ confidence }: { confidence: number }) {
   );
 }
 
+type DecisionEntryItem = {
+  id: string;
+  type: "action" | "decision";
+  label: string;
+  title: string;
+  summary: string;
+  basedOn: string[];
+  confidence: number;
+  impact: string[];
+  risk: string[];
+  decisionPrompt: string;
+  decisionOptions: string[];
+  executionStatus: string;
+  executionMeta?: string;
+  executionResult: string[];
+  statusChange?: string;
+};
+
 function TaskFeedbackRow({
-  children,
+  title,
+  summary,
   confidence,
   feedbackAccent,
   last = false,
   action,
+  expanded = false,
+  onToggle,
 }: {
-  children: ReactNode;
+  title: string;
+  summary: string;
   confidence: number;
   feedbackAccent: string;
   last?: boolean;
   action?: ReactNode;
+  expanded?: boolean;
+  onToggle?: () => void;
 }) {
   return (
     <Row
@@ -57,9 +81,15 @@ function TaskFeedbackRow({
       }}
     >
       <div style={{ display: "flex", gap: 12, alignItems: "flex-start", width: "100%", justifyContent: "space-between", flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", flex: 1, minWidth: 280 }}>
-          {children}
-        </div>
+        <button onClick={onToggle} style={{ display: "flex", gap: 12, alignItems: "flex-start", flex: 1, minWidth: 280, background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
+          <span style={{ width: 22, height: 22, borderRadius: 999, border: `1px solid ${expanded ? feedbackAccent : C.borderMd}`, display: "inline-flex", alignItems: "center", justifyContent: "center", color: expanded ? feedbackAccent : C.text3, flexShrink: 0, marginTop: 1, fontSize: 12, fontWeight: 700 }}>
+            {expanded ? "−" : "+"}
+          </span>
+          <div style={{ display: "grid", gap: 4 }}>
+            <span style={{ fontSize: 13.5, color: C.text0, lineHeight: 1.65, fontWeight: 600 }}>{title}</span>
+            <span style={{ fontSize: 12, color: C.text2, lineHeight: 1.55 }}>{summary}</span>
+          </div>
+        </button>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: "auto", flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
           {action}
           <div style={{ color: feedbackAccent }}>
@@ -78,8 +108,9 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
   const [inputModalOpen, setInputModalOpen] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
   const assignmentSectionRef = useRef<HTMLDivElement | null>(null);
-  const [completedSuggestedActions, setCompletedSuggestedActions] = useState<string[]>([]);
-  const [completedQuestionsToConfirm, setCompletedQuestionsToConfirm] = useState<string[]>([]);
+  const [openSuggestedActionId, setOpenSuggestedActionId] = useState<string | null>(roleVariant === "sales" ? "sales-action-1" : "cs-action-1");
+  const [openQuestionId, setOpenQuestionId] = useState<string | null>(roleVariant === "sales" ? "sales-question-1" : "cs-question-1");
+  const [decisionSelections, setDecisionSelections] = useState<Record<string, string>>({});
   const [executionInput, setExecutionInput] = useState("客户反馈：配偶愿意参加周末到店体验，但希望先看品牌对比和家庭空间体验。");
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [uploadedMaterials, setUploadedMaterials] = useState([
@@ -108,10 +139,109 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
             { label: "正在生成销售视角分析", status: "等待中" },
           ],
           liveWorkspace: {
-            suggestedActions: ["优先按“家庭体验 + 品牌对比”双线组织本轮沟通，不要直接切报价。", "先把配偶顾虑拆成品牌认知、空间体验、预算三个维度，再决定是否需要经理介入。", "如果客户能确认周末档期，下一步可同步准备家庭场景试驾路线与服务承诺材料。"],
+            suggestedActions: [
+              {
+                id: "sales-action-1",
+                type: "action",
+                label: "推荐动作",
+                title: "家庭体验导向沟通",
+                summary: "优先按“家庭体验 + 品牌对比”双线组织本轮沟通，不要直接切报价。",
+                basedOn: ["双人决策阶段", "配偶态度松动", "当前仍在认知阶段"],
+                confidence: 85,
+                impact: ["有助于形成共同决策", "降低价格敏感触发"],
+                risk: ["沟通节奏过慢可能延长周期"],
+                decisionPrompt: "你要如何推进？",
+                decisionOptions: ["立即沟通（体验导向）", "稍后安排", "改为价格沟通", "标记不适用"],
+                executionStatus: "已沟通",
+                executionMeta: "今天 15:30 · 微信",
+                executionResult: ["客户表示愿意带配偶到店", "仍未讨论价格"],
+                statusChange: "“单人推进” → “双人共同决策”",
+              },
+              {
+                id: "sales-action-2",
+                type: "action",
+                label: "推荐动作",
+                title: "拆解配偶顾虑",
+                summary: "先把配偶顾虑拆成品牌认知、空间体验、预算三个维度，再决定是否需要经理介入。",
+                basedOn: ["配偶态度松动但不明确", "决策维度不清晰"],
+                confidence: 81,
+                impact: ["明确真实决策阻力", "提高沟通针对性"],
+                risk: ["过度追问可能引起防御"],
+                decisionPrompt: "你要如何处理？",
+                decisionOptions: ["主动引导拆解", "等待客户自然表达", "跳过此步骤"],
+                executionStatus: "已执行",
+                executionResult: ["主要顾虑：空间体验 + 品牌认知", "预算未明确"],
+                statusChange: "“模糊顾虑” → “结构化顾虑”",
+              },
+              {
+                id: "sales-action-3",
+                type: "action",
+                label: "推荐动作",
+                title: "推进周末到店体验",
+                summary: "如果客户能确认周末档期，下一步可同步准备家庭场景试驾路线与服务承诺材料。",
+                basedOn: ["已有初步兴趣", "存在家庭参与意愿"],
+                confidence: 78,
+                impact: ["提升成交概率", "加快决策节奏"],
+                risk: ["若体验准备不足可能反效果"],
+                decisionPrompt: "你要如何推进？",
+                decisionOptions: ["立即确认时间", "先发送资料再确认", "暂不推进"],
+                executionStatus: "已确认",
+                executionResult: ["周六下午到店", "需要家庭场景体验准备"],
+                statusChange: "“意向” → “到店预约”",
+              },
+            ],
             blockedItems: ["仍不得直接联系配偶本人", "折扣承诺与金融方案口径不能先于审批给出", "售后响应时效不能口头扩大承诺"],
             currentUnderstanding: "当前任务已从单人高意向跟进切换为双人共同决策推动。客户本人在推进，配偶态度出现松动，但是否真正在意品牌形象、空间体验还是保值率，还需要继续收集一手表达。",
-            questionsToConfirm: ["配偶愿意参加的是到店体验还是单独看资料？", "客户预算上限是否因家庭讨论发生变化？", "这次补充信息里有没有明确提到竞品品牌？"],
+            questionsToConfirm: [
+              {
+                id: "sales-question-1",
+                type: "decision",
+                label: "关键决策",
+                title: "配偶参与方式",
+                summary: "配偶愿意参加的是到店体验还是单独看资料？",
+                basedOn: ["当前不确定：到店体验 vs 看资料"],
+                confidence: 76,
+                impact: ["决定推进路径", "影响沟通策略"],
+                risk: [],
+                decisionPrompt: "你要怎么确认？",
+                decisionOptions: ["直接询问客户", "通过试探性话术确认", "暂不确认"],
+                executionStatus: "已确认",
+                executionResult: ["配偶更倾向到店体验"],
+                statusChange: "→ 转为“家庭体验路线”",
+              },
+              {
+                id: "sales-question-2",
+                type: "decision",
+                label: "关键决策",
+                title: "预算是否变化",
+                summary: "客户预算上限是否因家庭讨论发生变化？",
+                basedOn: ["当前不确定：家庭讨论后是否调整预算"],
+                confidence: 71,
+                impact: ["决定报价策略", "决定是否引入金融方案"],
+                risk: [],
+                decisionPrompt: "你要怎么处理？",
+                decisionOptions: ["直接询问预算", "通过方案试探", "暂不处理"],
+                executionStatus: "未完全确认",
+                executionResult: ["未确认明确预算", "客户表达“需要对比”"],
+                statusChange: "→ “价格敏感”上升",
+              },
+              {
+                id: "sales-question-3",
+                type: "decision",
+                label: "关键决策",
+                title: "是否存在竞品对比",
+                summary: "这次补充信息里有没有明确提到竞品品牌？",
+                basedOn: ["当前不确定：是否在对比其他品牌"],
+                confidence: 68,
+                impact: ["决定是否进入“对比话术”", "决定竞争策略"],
+                risk: [],
+                decisionPrompt: "你要怎么确认？",
+                decisionOptions: ["直接询问竞品", "通过引导话术探测", "不主动触碰"],
+                executionStatus: "已确认",
+                executionResult: ["已确认竞品：XXX 品牌"],
+                statusChange: "→ 引入“品牌对比 + 差异化”",
+              },
+            ],
           },
           submittedHistoryEvent: { id: "E-042", type: "SALES_VISIT", typeLabel: "销售拜访", owner: customer.currentOwner, date: "今天", summary: "已提交本轮家庭体验邀约整理结果：确认客户愿意继续推进配偶共同体验，并补充了品牌对比、家庭空间体验与预算边界相关一线信息。", status: "已提交" },
         }
@@ -133,10 +263,109 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
             { label: "正在生成客服视角分析", status: "等待中" },
           ],
           liveWorkspace: {
-            suggestedActions: ["先确认客户更适合微信回访还是电话沟通，再安排服务说明发送节奏。", "围绕家庭体验安排、服务承诺说明和响应方式三点收集反馈，不要直接进入成交推动。", "确认结果后同步给销售 owner，由销售决定是否继续推进家庭到店体验。"],
+            suggestedActions: [
+              {
+                id: "cs-action-1",
+                type: "action",
+                label: "推荐动作",
+                title: "确认回访渠道并安排服务说明",
+                summary: "先确认客户更适合微信回访还是电话沟通，再安排服务说明发送节奏。",
+                basedOn: ["客户触达方式尚未明确", "需要控制服务说明节奏"],
+                confidence: 85,
+                impact: ["提升回访接受度", "避免无效打扰"],
+                risk: ["触达方式判断错误会降低响应率"],
+                decisionPrompt: "你要如何推进？",
+                decisionOptions: ["立即微信确认", "先电话确认", "稍后安排"],
+                executionStatus: "已沟通",
+                executionMeta: "今天 15:10 · 微信",
+                executionResult: ["客户接受微信沟通", "服务说明待晚间发送"],
+                statusChange: "“待触达” → “已建立服务沟通通道”",
+              },
+              {
+                id: "cs-action-2",
+                type: "action",
+                label: "推荐动作",
+                title: "围绕三点收集反馈",
+                summary: "围绕家庭体验安排、服务承诺说明和响应方式三点收集反馈，不要直接进入成交推动。",
+                basedOn: ["当前目标是稳住关系温度", "客服不适合越权推进成交"],
+                confidence: 81,
+                impact: ["补齐服务侧信息", "稳定客户感受"],
+                risk: ["问题过散会削弱回访效率"],
+                decisionPrompt: "你要如何处理？",
+                decisionOptions: ["按三点结构回访", "先聚焦服务承诺", "跳过本轮收集"],
+                executionStatus: "已执行",
+                executionResult: ["客户关注服务承诺说明", "家庭体验安排可继续沟通"],
+                statusChange: "“泛化反馈” → “结构化服务反馈”",
+              },
+              {
+                id: "cs-action-3",
+                type: "action",
+                label: "推荐动作",
+                title: "同步结果给销售 owner",
+                summary: "确认结果后同步给销售 owner，由销售决定是否继续推进家庭到店体验。",
+                basedOn: ["客服回访结果已形成", "下一步推进权在销售 owner"],
+                confidence: 78,
+                impact: ["保持职责边界清晰", "加快销售承接"],
+                risk: ["同步不及时会耽误到店推进"],
+                decisionPrompt: "你要如何推进？",
+                decisionOptions: ["立即同步", "整理后同步", "暂不同步"],
+                executionStatus: "已同步",
+                executionResult: ["销售 owner 已收到结果", "等待销售决定是否推进家庭到店体验"],
+                statusChange: "“客服单线回访” → “销售承接协同”",
+              },
+            ],
             blockedItems: ["仍不得直接联系配偶本人", "不得承诺折扣与金融政策", "不得替销售 owner 输出成交判断"],
             currentUnderstanding: "当前客服版本的任务重点是稳住关系温度，并通过服务说明和体验协同确认帮助销售继续推进，而不是直接承担成交推进职责。",
-            questionsToConfirm: ["客户更接受微信回访还是电话沟通？", "客户是否希望先收到服务承诺说明再确认家庭体验？", "客服回访结果是否需要当天同步给销售 owner？"],
+            questionsToConfirm: [
+              {
+                id: "cs-question-1",
+                type: "decision",
+                label: "关键决策",
+                title: "客户更接受哪种回访方式",
+                summary: "客户更接受微信回访还是电话沟通？",
+                basedOn: ["当前不确定：微信回访 vs 电话沟通"],
+                confidence: 76,
+                impact: ["决定回访路径", "影响响应效率"],
+                risk: [],
+                decisionPrompt: "你要怎么确认？",
+                decisionOptions: ["直接询问客户", "先发微信试探", "暂不确认"],
+                executionStatus: "已确认",
+                executionResult: ["客户更接受微信回访"],
+                statusChange: "→ 后续优先走微信回访",
+              },
+              {
+                id: "cs-question-2",
+                type: "decision",
+                label: "关键决策",
+                title: "是否先发服务承诺说明",
+                summary: "客户是否希望先收到服务承诺说明再确认家庭体验？",
+                basedOn: ["当前不确定：是否先接收材料再推进体验"],
+                confidence: 71,
+                impact: ["决定服务材料发送顺序", "影响家庭体验确认节奏"],
+                risk: [],
+                decisionPrompt: "你要怎么处理？",
+                decisionOptions: ["直接询问偏好", "先发送摘要试探", "暂不处理"],
+                executionStatus: "已确认",
+                executionResult: ["客户希望先收到服务承诺说明"],
+                statusChange: "→ 先发说明，再确认家庭体验",
+              },
+              {
+                id: "cs-question-3",
+                type: "decision",
+                label: "关键决策",
+                title: "是否当天同步给销售 owner",
+                summary: "客服回访结果是否需要当天同步给销售 owner？",
+                basedOn: ["当前不确定：同步时效是否影响销售承接"],
+                confidence: 68,
+                impact: ["决定协同效率", "影响销售是否及时推进"],
+                risk: [],
+                decisionPrompt: "你要怎么确认？",
+                decisionOptions: ["当天同步", "次日整理后同步", "由系统自动同步"],
+                executionStatus: "已确认",
+                executionResult: ["建议当天同步给销售 owner"],
+                statusChange: "→ 协同节奏前置",
+              },
+            ],
           },
           submittedHistoryEvent: { id: "E-042", type: "CS_OUTREACH", typeLabel: "客服回访", owner: "李明", date: "今天", summary: "已提交本轮服务回访与家庭体验协同确认结果：确认客户愿意先接收服务说明，并等待销售继续承接家庭体验安排。", status: "已提交" },
         } as const;
@@ -178,10 +407,104 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
     setDraftSaved(true);
     setTaskPanelState("整理中");
   };
-  const orderedSuggestedActions = [...liveWorkspace.suggestedActions.filter((item) => !completedSuggestedActions.includes(item)), ...liveWorkspace.suggestedActions.filter((item) => completedSuggestedActions.includes(item))];
-  const orderedQuestionsToConfirm = [...liveWorkspace.questionsToConfirm.filter((item) => !completedQuestionsToConfirm.includes(item)), ...liveWorkspace.questionsToConfirm.filter((item) => completedQuestionsToConfirm.includes(item))];
+  const orderedSuggestedActions = liveWorkspace.suggestedActions as DecisionEntryItem[];
+  const orderedQuestionsToConfirm = liveWorkspace.questionsToConfirm as DecisionEntryItem[];
   const detailSectionTitleStyle: CSSProperties = { fontSize: 13, color: C.text3, letterSpacing: 0.4 };
   const purple = { color: "#6D5BD0", bg: "#F3F0FF", border: "#DDD6FE" } as const;
+  const setDecisionSelection = (itemId: string, option: string) => {
+    setDecisionSelections((prev) => ({ ...prev, [itemId]: option }));
+  };
+  const renderDecisionPanel = (item: DecisionEntryItem, accent: { color: string; bg: string; border: string }) => (
+    <div style={{ margin: "4px 0 8px 34px", border: `1px solid ${accent.border}`, borderRadius: 12, background: accent.bg, padding: "14px 16px", display: "grid", gap: 14 }}>
+      <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+          <Tag label={item.label} variant={item.type === "action" ? "green" : "amber"} small />
+          <Tag label={`置信度 ${item.confidence}%`} variant="neutral" small />
+        </div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: C.text0, marginBottom: 8 }}>{item.title}</div>
+        <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.75 }}>{item.summary}</div>
+      </div>
+      <div style={{ display: "grid", gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 11, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>基于</div>
+          <div style={{ display: "grid", gap: 6 }}>
+            {item.basedOn.map((entry) => (
+              <div key={entry} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                <span style={{ color: accent.color, fontWeight: 700 }}>•</span>
+                <span style={{ fontSize: 13, color: C.text1, lineHeight: 1.65 }}>{entry}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: item.risk.length > 0 ? "1fr 1fr" : "1fr", gap: 12 }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 11, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>影响</div>
+            <div style={{ display: "grid", gap: 6 }}>
+              {item.impact.map((entry) => (
+                <div key={entry} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <span style={{ color: C.green, fontWeight: 700 }}>+</span>
+                  <span style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{entry}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          {item.risk.length > 0 && (
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 11, color: C.text2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>风险</div>
+              <div style={{ display: "grid", gap: 6 }}>
+                {item.risk.map((entry) => (
+                  <div key={entry} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                    <span style={{ color: C.red, fontWeight: 700 }}>!</span>
+                    <span style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{entry}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+        <div style={{ fontSize: 11, color: C.text2, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>决策入口</div>
+        <div style={{ fontSize: 13, color: C.text0, marginBottom: 10 }}>{item.decisionPrompt}</div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {item.decisionOptions.map((option) => (
+            <button
+              key={option}
+              onClick={() => setDecisionSelection(item.id, option)}
+              style={{
+                padding: "7px 12px",
+                borderRadius: 999,
+                border: `1px solid ${decisionSelections[item.id] === option ? accent.border : C.border}`,
+                background: decisionSelections[item.id] === option ? accent.bg : C.surface,
+                color: decisionSelections[item.id] === option ? accent.color : C.text1,
+                fontSize: 12.5,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 10 }}>
+          <div style={{ fontSize: 11, color: C.text2, textTransform: "uppercase", letterSpacing: 0.5 }}>执行结果</div>
+          <Tag label={item.executionStatus} variant={item.executionStatus.includes("未") ? "amber" : "green"} small />
+        </div>
+        {item.executionMeta && <div style={{ fontSize: 12, color: C.text2, marginBottom: 8 }}>{item.executionMeta}</div>}
+        <div style={{ display: "grid", gap: 6 }}>
+          {item.executionResult.map((entry) => (
+            <div key={entry} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+              <span style={{ color: C.green, fontWeight: 700 }}>•</span>
+              <span style={{ fontSize: 13, color: C.text1, lineHeight: 1.65 }}>{entry}</span>
+            </div>
+          ))}
+        </div>
+        {item.statusChange && <div style={{ marginTop: 10, background: accent.bg, border: `1px solid ${accent.border}`, borderRadius: 8, padding: "9px 12px", fontSize: 12.5, color: accent.color, fontWeight: 600 }}>状态变化：{item.statusChange}</div>}
+      </div>
+    </div>
+  );
   const renderApprovalActions = () => (
     <>
       <PrimaryBtn onClick={() => setTaskPanelState("无任务")}>审批并提交</PrimaryBtn>
@@ -388,14 +711,20 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
             <div style={{ background: "#FCFDFE", border: `1px solid ${C.greenBorder}`, borderRadius: 10, padding: "12px 14px" }}>
               <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>实时更新的建议动作</div>
               {orderedSuggestedActions.map((item, index) => {
-                const checked = completedSuggestedActions.includes(item);
+                const expanded = openSuggestedActionId === item.id;
                 return (
-                  <TaskFeedbackRow key={item} last={index === orderedSuggestedActions.length - 1} confidence={[85, 81, 78][index % 3]} feedbackAccent={C.green}>
-                    <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer", width: "100%" }}>
-                      <input type="checkbox" checked={checked} onChange={(e) => setCompletedSuggestedActions((prev) => e.target.checked ? [...prev, item] : prev.filter((entry) => entry !== item))} style={{ marginTop: 2, accentColor: C.green, width: 16, height: 16, cursor: "pointer", flexShrink: 0 }} />
-                      <span style={{ fontSize: 13, color: checked ? C.text3 : C.text0, lineHeight: 1.65, textDecoration: checked ? "line-through" : "none" }}>{item}</span>
-                    </label>
-                  </TaskFeedbackRow>
+                  <div key={item.id}>
+                    <TaskFeedbackRow
+                      title={item.summary}
+                      summary={`${item.label} · 点击展开查看决策入口与执行结果`}
+                      last={index === orderedSuggestedActions.length - 1 && !expanded}
+                      confidence={item.confidence}
+                      feedbackAccent={C.green}
+                      expanded={expanded}
+                      onToggle={() => setOpenSuggestedActionId((prev) => (prev === item.id ? null : item.id))}
+                    />
+                    {expanded && renderDecisionPanel(item, { color: C.green, bg: "#F3FBF5", border: C.greenBorder })}
+                  </div>
                 );
               })}
             </div>
@@ -403,20 +732,21 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
               <div style={{ background: "#FCFDFE", border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "12px 14px" }}>
                 <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>待确认问题</div>
                 {orderedQuestionsToConfirm.map((item, index) => {
-                  const checked = completedQuestionsToConfirm.includes(item);
+                  const expanded = openQuestionId === item.id;
                   return (
-                    <TaskFeedbackRow
-                      key={item}
-                      last={index === orderedQuestionsToConfirm.length - 1}
-                      confidence={[76, 71, 68][index % 3]}
-                      feedbackAccent={C.amber}
-                      action={<SecondaryBtn style={{ padding: "5px 10px", fontSize: 12 }}>备注</SecondaryBtn>}
-                    >
-                      <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer", flex: 1, minWidth: 0 }}>
-                        <input type="checkbox" checked={checked} onChange={(e) => setCompletedQuestionsToConfirm((prev) => e.target.checked ? [...prev, item] : prev.filter((entry) => entry !== item))} style={{ marginTop: 2, accentColor: C.amber, width: 16, height: 16, cursor: "pointer", flexShrink: 0 }} />
-                        <span style={{ fontSize: 13, color: checked ? C.text3 : C.text0, lineHeight: 1.65, textDecoration: checked ? "line-through" : "none" }}>{item}</span>
-                      </label>
-                    </TaskFeedbackRow>
+                    <div key={item.id}>
+                      <TaskFeedbackRow
+                        title={item.summary}
+                        summary={`${item.label} · 点击展开查看决策入口与执行结果`}
+                        last={index === orderedQuestionsToConfirm.length - 1 && !expanded}
+                        confidence={item.confidence}
+                        feedbackAccent={C.amber}
+                        action={<SecondaryBtn style={{ padding: "5px 10px", fontSize: 12 }}>备注</SecondaryBtn>}
+                        expanded={expanded}
+                        onToggle={() => setOpenQuestionId((prev) => (prev === item.id ? null : item.id))}
+                      />
+                      {expanded && renderDecisionPanel(item, { color: C.amber, bg: "#FFF9EC", border: C.amberBorder })}
+                    </div>
                   );
                 })}
               </div>
