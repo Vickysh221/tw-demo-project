@@ -14,7 +14,7 @@ function FeedbackWidget({ confidence }: { confidence: number }) {
     setTimeout(() => setShowToast(false), 2000);
   };
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, position: "relative" }}>
       <button onClick={() => handleFeedback("up")} style={{ border: `1px solid ${feedback === "up" ? C.green : C.border}`, background: feedback === "up" ? C.greenLight : C.surface, borderRadius: 8, width: 32, height: 32, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: feedback === "up" ? C.green : C.text2, transition: "all 0.15s" }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" /></svg>
       </button>
@@ -30,7 +30,7 @@ function FeedbackWidget({ confidence }: { confidence: number }) {
           <span style={{ fontSize: 10, fontWeight: 700, color: C.green }}>{confidence}%</span>
         </div>
       </div>
-      {showToast && <div style={{ position: "absolute", top: -36, left: "50%", transform: "translateX(-50%)", background: C.text0, color: "#fff", padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 500, whiteSpace: "nowrap", zIndex: 10 }}>已收到反馈</div>}
+      {showToast && <div style={{ position: "absolute", top: -40, left: "50%", transform: "translateX(-50%)", background: C.text0, color: "#fff", padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 500, whiteSpace: "nowrap", zIndex: 100, boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>已收到反馈</div>}
     </div>
   );
 }
