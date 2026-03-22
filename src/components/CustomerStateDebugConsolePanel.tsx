@@ -263,7 +263,6 @@ function JudgmentNodeDetail({
   const supportEvidence = node.evidence.filter((e) => e.polarity !== "counter");
   const counterEvidence = node.evidence.filter((e) => e.polarity === "counter");
   const finalConfidence = node.inferencePath.reduce((sum, step) => sum + (step.delta ?? 0), 0);
-  const { high, mid, low } = node.confidenceDistribution;
 
   const Divider = ({ title }: { title: string }) => (
     <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 12, marginTop: 14 }}>
@@ -284,20 +283,6 @@ function JudgmentNodeDetail({
             </div>
           ))}
         </div>
-      </div>
-
-      {/* 置信分布 */}
-      <Divider title="置信分布" />
-      <div style={{ display: "grid", gap: 7 }}>
-        {([["高", high, C.green], ["中", mid, C.amber], ["低", low, C.red]] as [string, number, string][]).map(([label, value, color]) => (
-          <div key={label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: 12.5, color: C.text2, width: 18 }}>{label}</div>
-            <div style={{ flex: 1, height: 6, background: C.surfaceAlt, borderRadius: 3, overflow: "hidden", border: `1px solid ${C.border}` }}>
-              <div style={{ width: `${value}%`, height: "100%", background: color, borderRadius: 3 }} />
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color, minWidth: 34, textAlign: "right" }}>{value}%</div>
-          </div>
-        ))}
       </div>
 
       {/* 被修正情况 */}
