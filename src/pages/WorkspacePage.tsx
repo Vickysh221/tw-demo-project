@@ -4,6 +4,8 @@ import { customer } from "../app/data";
 import { C } from "../app/theme";
 import type { WorkspacePageProps } from "../app/types";
 import { AgentBlock, Card, CardPad, ConfidenceBar, DecisionTensionCard, GhostBtn, Header, PrimaryBtn, PriorityCard, Row, SecondaryBtn, SectionTitle, Tag, DangerBtn, getPriorityTone } from "../app/ui";
+import { getActionRecommendationItems } from "../data/actionRecommendationMock";
+import ActionRecommendationList from "../components/recommendation/ActionRecommendationList";
 
 function FeedbackWidget({ confidence }: { confidence: number }) {
   const [feedback, setFeedback] = useState<"up" | "down" | null>(null);
@@ -108,9 +110,14 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
   const [inputModalOpen, setInputModalOpen] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
   const assignmentSectionRef = useRef<HTMLDivElement | null>(null);
-  const [openSuggestedActionId, setOpenSuggestedActionId] = useState<string | null>(roleVariant === "sales" ? "sales-action-1" : "cs-action-1");
   const [openQuestionId, setOpenQuestionId] = useState<string | null>(roleVariant === "sales" ? "sales-question-1" : "cs-question-1");
   const [decisionSelections, setDecisionSelections] = useState<Record<string, string>>({});
+  const [questionDecisionOtherOpen, setQuestionDecisionOtherOpen] = useState<Record<string, boolean>>({});
+  const [otherQuestionDecisionDrafts, setOtherQuestionDecisionDrafts] = useState<Record<string, string>>({});
+  const [selectedQuestionPredictions, setSelectedQuestionPredictions] = useState<Record<string, string>>({});
+  const [questionPredictionOtherOpen, setQuestionPredictionOtherOpen] = useState<Record<string, boolean>>({});
+  const [actualQuestionResultDrafts, setActualQuestionResultDrafts] = useState<Record<string, string>>({});
+  const [submittedQuestionResults, setSubmittedQuestionResults] = useState<Record<string, string>>({});
   const [executionInput, setExecutionInput] = useState("客户反馈：配偶愿意参加周末到店体验，但希望先看品牌对比和家庭空间体验。");
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [uploadedMaterials, setUploadedMaterials] = useState([
@@ -407,8 +414,8 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
     setDraftSaved(true);
     setTaskPanelState("整理中");
   };
-  const orderedSuggestedActions = liveWorkspace.suggestedActions as DecisionEntryItem[];
   const orderedQuestionsToConfirm = liveWorkspace.questionsToConfirm as DecisionEntryItem[];
+  const actionRecommendations = getActionRecommendationItems(roleVariant);
   const detailSectionTitleStyle: CSSProperties = { fontSize: 13, color: C.text3, letterSpacing: 0.4 };
   const purple = { color: "#6D5BD0", bg: "#F3F0FF", border: "#DDD6FE" } as const;
   const setDecisionSelection = (itemId: string, option: string) => {
@@ -485,23 +492,114 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
               {option}
             </button>
           ))}
+          <button
+            onClick={() => setQuestionDecisionOtherOpen((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
+            style={{
+              padding: "7px 12px",
+              borderRadius: 999,
+              border: `1px solid ${questionDecisionOtherOpen[item.id] ? accent.border : C.border}`,
+              background: questionDecisionOtherOpen[item.id] ? accent.bg : C.surface,
+              color: questionDecisionOtherOpen[item.id] ? accent.color : C.text1,
+              fontSize: 12.5,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            其他
+          </button>
         </div>
+        {questionDecisionOtherOpen[item.id] && <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 10 }}>
+          <span style={{ fontSize: 12.5, color: C.text2, fontWeight: 600 }}>其他:</span>
+          <input
+            value={otherQuestionDecisionDrafts[item.id] ?? ""}
+            onChange={(event) => setOtherQuestionDecisionDrafts((prev) => ({ ...prev, [item.id]: event.target.value }))}
+            placeholder="输入其他处理方式"
+            style={{ flex: "1 1 220px", minWidth: 180, border: `1px solid ${C.border}`, borderRadius: 999, background: C.surfaceAlt, color: C.text0, fontSize: 12.5, padding: "8px 12px", outline: "none" }}
+          />
+          <PrimaryBtn
+            onClick={() => {
+              const value = (otherQuestionDecisionDrafts[item.id] ?? "").trim();
+              if (!value) return;
+              setDecisionSelection(item.id, `其他：${value}`);
+            }}
+            style={{ padding: "8px 14px", fontSize: 12.5 }}
+          >
+            确定
+          </PrimaryBtn>
+        </div>}
       </div>
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 10 }}>
-          <div style={{ fontSize: 11, color: C.text2, textTransform: "uppercase", letterSpacing: 0.5 }}>执行结果</div>
-          <Tag label={item.executionStatus} variant={item.executionStatus.includes("未") ? "amber" : "green"} small />
-        </div>
+        <div style={{ fontSize: 11, color: C.text2, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>执行结果</div>
         {item.executionMeta && <div style={{ fontSize: 12, color: C.text2, marginBottom: 8 }}>{item.executionMeta}</div>}
-        <div style={{ display: "grid", gap: 6 }}>
+        <div style={{ fontSize: 12, color: C.text2, marginBottom: 8, fontWeight: 600 }}>系统推测</div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {item.executionResult.map((entry) => (
-            <div key={entry} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-              <span style={{ color: C.green, fontWeight: 700 }}>•</span>
-              <span style={{ fontSize: 13, color: C.text1, lineHeight: 1.65 }}>{entry}</span>
-            </div>
+            <button
+              key={entry}
+              onClick={() => {
+                setSelectedQuestionPredictions((prev) => ({ ...prev, [item.id]: entry }));
+                setQuestionPredictionOtherOpen((prev) => ({ ...prev, [item.id]: false }));
+              }}
+              style={{
+                padding: "7px 12px",
+                borderRadius: 999,
+                border: `1px solid ${selectedQuestionPredictions[item.id] === entry ? accent.border : C.border}`,
+                background: selectedQuestionPredictions[item.id] === entry ? accent.bg : C.surface,
+                color: selectedQuestionPredictions[item.id] === entry ? accent.color : C.text1,
+                fontSize: 12.5,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              {entry}
+            </button>
           ))}
+          <button
+            onClick={() => {
+              setQuestionPredictionOtherOpen((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
+              setSelectedQuestionPredictions((prev) => ({ ...prev, [item.id]: "__other__" }));
+            }}
+            style={{
+              padding: "7px 12px",
+              borderRadius: 999,
+              border: `1px solid ${questionPredictionOtherOpen[item.id] ? accent.border : C.border}`,
+              background: questionPredictionOtherOpen[item.id] ? accent.bg : C.surface,
+              color: questionPredictionOtherOpen[item.id] ? accent.color : C.text1,
+              fontSize: 12.5,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            其他
+          </button>
         </div>
-        {item.statusChange && <div style={{ marginTop: 10, background: accent.bg, border: `1px solid ${accent.border}`, borderRadius: 8, padding: "9px 12px", fontSize: 12.5, color: accent.color, fontWeight: 600 }}>状态变化：{item.statusChange}</div>}
+        {questionPredictionOtherOpen[item.id] && <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 12, color: C.text2, marginBottom: 8, fontWeight: 600 }}>实际执行结果</div>
+          <textarea
+            value={actualQuestionResultDrafts[item.id] ?? ""}
+            onChange={(event) => setActualQuestionResultDrafts((prev) => ({ ...prev, [item.id]: event.target.value }))}
+            placeholder="输入本次实际执行结果，例如客户真实回答、是否已确认、下一步如何处理。"
+            style={{ width: "100%", border: `1px solid ${C.border}`, borderRadius: 8, background: C.surfaceAlt, color: C.text0, fontSize: 13, padding: "10px 12px", resize: "vertical", minHeight: 84, outline: "none", fontFamily: C.sans }}
+          />
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap", marginTop: 10 }}>
+            <PrimaryBtn
+              onClick={() => {
+                const value = (actualQuestionResultDrafts[item.id] ?? "").trim();
+                if (!value) return;
+                setSubmittedQuestionResults((prev) => ({ ...prev, [item.id]: value }));
+              }}
+              style={{ padding: "8px 14px", fontSize: 12.5 }}
+            >
+              提交
+            </PrimaryBtn>
+            {submittedQuestionResults[item.id] && (
+              <div style={{ flex: 1, minWidth: 220, background: C.blueLight, border: `1px solid ${C.blueBorder}`, borderRadius: 8, padding: "9px 12px" }}>
+                <div style={{ fontSize: 11, color: C.blue, fontWeight: 700, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>已提交的实际执行结果</div>
+                <div style={{ fontSize: 13, color: C.text0, lineHeight: 1.65 }}>{submittedQuestionResults[item.id]}</div>
+              </div>
+            )}
+          </div>
+        </div>}
       </div>
     </div>
   );
@@ -708,26 +806,7 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
                 <div style={{ fontSize: 13, color: C.text1, lineHeight: 1.7 }}>{liveWorkspace.currentUnderstanding}</div>
               </div>
             </div>
-            <div style={{ background: "#FCFDFE", border: `1px solid ${C.greenBorder}`, borderRadius: 10, padding: "12px 14px" }}>
-              <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>实时更新的建议动作</div>
-              {orderedSuggestedActions.map((item, index) => {
-                const expanded = openSuggestedActionId === item.id;
-                return (
-                  <div key={item.id}>
-                    <TaskFeedbackRow
-                      title={item.summary}
-                      summary={`${item.label} · 点击展开查看决策入口与执行结果`}
-                      last={index === orderedSuggestedActions.length - 1 && !expanded}
-                      confidence={item.confidence}
-                      feedbackAccent={C.green}
-                      expanded={expanded}
-                      onToggle={() => setOpenSuggestedActionId((prev) => (prev === item.id ? null : item.id))}
-                    />
-                    {expanded && renderDecisionPanel(item, { color: C.green, bg: "#F3FBF5", border: C.greenBorder })}
-                  </div>
-                );
-              })}
-            </div>
+            <ActionRecommendationList items={actionRecommendations} />
             <div>
               <div style={{ background: "#FCFDFE", border: `1px solid ${C.amberBorder}`, borderRadius: 10, padding: "12px 14px" }}>
                 <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>待确认问题</div>

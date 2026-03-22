@@ -5,6 +5,7 @@ export type WorkspaceRoleVariant = "sales" | "cs";
 export type PillVariant = "green" | "blue" | "amber" | "red" | "neutral";
 export type TagVariant = PillVariant | "purple";
 export type TaskPanelState = "待执行" | "执行中" | "整理中" | "确认本轮结果" | "无任务";
+export type ActionCardStatus = "none" | "executed" | "confirmed" | "communicated" | "synced";
 
 export type StatusPillProps = {
   label: string;
@@ -65,3 +66,37 @@ export type DecisionTensionData = {
   evidenceEntryLabel: string;
   evidence: readonly string[];
 };
+
+export interface ActionDecisionOption {
+  id: string;
+  label: string;
+  isPrimary?: boolean;
+}
+
+export interface ActionExecutionResult {
+  status: ActionCardStatus;
+  statusLabel: string;
+  meta?: string;
+  bullets: string[];
+  stateTransition?: string;
+}
+
+export interface ActionRecommendationItem {
+  id: string;
+  roleVariant: WorkspaceRoleVariant;
+  title: string;
+  shortHint?: string;
+  confidence: number;
+  badgeLabel?: string;
+  panelTitle: string;
+  description: string;
+  basedOn: string[];
+  impact: string[];
+  risk: string[];
+  decisionQuestion: string;
+  decisionOptions: ActionDecisionOption[];
+  executionResult: ActionExecutionResult;
+  feedback?: {
+    liked?: boolean | null;
+  };
+}
