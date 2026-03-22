@@ -31,7 +31,7 @@ export function Tag({ label, variant = "neutral", small = false }: TagProps) {
     purple: { color: "#6D5BD0", bg: "#F3F0FF", border: "#DDD6FE" },
   };
   const s = styles[variant];
-  return <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: small ? 32 : 38, padding: small ? "0 12px" : "0 16px", borderRadius: 12, border: `1px solid ${s.border}`, background: s.bg, color: s.color, fontSize: small ? 12 : 13, fontWeight: 600, whiteSpace: "nowrap" }}>{label}</span>;
+  return <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", height: small ? 22 : 28, padding: small ? "0 8px" : "0 12px", borderRadius: small ? 6 : 8, border: `1px solid ${s.border}`, background: s.bg, color: s.color, fontSize: small ? 11.5 : 12.5, fontWeight: 600, whiteSpace: "nowrap", lineHeight: 1 }}>{label}</span>;
 }
 
 export function SectionTitle({ children, style = {} }: SectionTitleProps) {
@@ -84,7 +84,7 @@ export function PriorityCard({ priority, badgeLabel, badgeExtras, title, childre
   return (
     <div style={{ background: tone.bg, border: `1px solid ${tone.border}`, borderRadius: 12, padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 16, ...style }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 44, height: 30, padding: "0 10px", border: `1px solid ${tone.border}`, background: tone.tagBg, color: tone.color, fontSize: 13, fontWeight: 500 }}>{badgeLabel ?? priority}</span>
+        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 36, height: 22, padding: "0 8px", border: `1px solid ${tone.border}`, background: tone.tagBg, color: tone.color, fontSize: 11.5, fontWeight: 700, borderRadius: 6, letterSpacing: 0.3 }}>{badgeLabel ?? priority}</span>
         {badgeExtras}
         <div style={{ fontSize: 20, color: C.text1, fontWeight: 600, lineHeight: 1.4, letterSpacing: 0.1 }}>{title}</div>
       </div>
