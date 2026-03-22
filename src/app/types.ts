@@ -42,7 +42,6 @@ export type WorkspacePageProps = {
   roleVariant: WorkspaceRoleVariant;
   taskPanelState: TaskPanelState;
   setTaskPanelState: (state: TaskPanelState) => void;
-  onOpenMessages: () => void;
 };
 
 export type ButtonProps = {

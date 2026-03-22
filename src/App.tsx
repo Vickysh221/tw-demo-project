@@ -16,8 +16,6 @@ const nav: Array<{ id: PageId; label: string }> = [
   { id: "myWorkbench", label: "我的工作台" },
   { id: "workspaceSales", label: "客户状态工作台" },
   { id: "workspaceCs", label: "客户状态工作台" },
-  { id: "sales", label: "销售轻记录" },
-  { id: "cs", label: "客服触达检查" },
   { id: "governance", label: "智能体后台管理" },
 ];
 
@@ -28,7 +26,8 @@ export default function App() {
 
   const openApprovalDetail = (item: ApprovalItem) => {
     setMessagePanelOpen(false);
-    setPage(item.source === "CS Agent" ? "cs" : "sales");
+    setGlobalTaskState("确认本轮结果");
+    setPage(item.source === "CS Agent" ? "workspaceCs" : "workspaceSales");
   };
 
   const messages =
@@ -281,8 +280,8 @@ export default function App() {
       )}
 
       {page === "myWorkbench" && <MyWorkbenchPage onOpenWorkspace={() => setPage("workspaceSales")} onOpenApprovalDetail={openApprovalDetail} />}
-      {page === "workspaceSales" && <WorkspacePage roleVariant="sales" taskPanelState={globalTaskState} setTaskPanelState={setGlobalTaskState} onOpenMessages={() => setMessagePanelOpen(true)} />}
-      {page === "workspaceCs" && <WorkspacePage roleVariant="cs" taskPanelState={globalTaskState} setTaskPanelState={setGlobalTaskState} onOpenMessages={() => setMessagePanelOpen(true)} />}
+      {page === "workspaceSales" && <WorkspacePage roleVariant="sales" taskPanelState={globalTaskState} setTaskPanelState={setGlobalTaskState} />}
+      {page === "workspaceCs" && <WorkspacePage roleVariant="cs" taskPanelState={globalTaskState} setTaskPanelState={setGlobalTaskState} />}
       {page === "sales" && <SalesPage />}
       {page === "cs" && <CSPage />}
       {page === "governance" && <GovernancePage />}
