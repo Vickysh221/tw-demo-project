@@ -35,8 +35,44 @@ function FeedbackWidget({ confidence }: { confidence: number }) {
   );
 }
 
+function TaskFeedbackRow({
+  children,
+  confidence,
+  feedbackAccent,
+  last = false,
+  action,
+}: {
+  children: ReactNode;
+  confidence: number;
+  feedbackAccent: string;
+  last?: boolean;
+  action?: ReactNode;
+}) {
+  return (
+    <Row
+      last={last}
+      style={{
+        alignItems: "flex-start",
+        padding: "8px 0",
+      }}
+    >
+      <div style={{ display: "flex", gap: 12, alignItems: "flex-start", width: "100%", justifyContent: "space-between", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start", flex: 1, minWidth: 280 }}>
+          {children}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: "auto", flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          {action}
+          <div style={{ color: feedbackAccent }}>
+            <FeedbackWidget confidence={confidence} />
+          </div>
+        </div>
+      </div>
+    </Row>
+  );
+}
+
 export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPanelState }: WorkspacePageProps) {
-  const [workTab, setWorkTab] = useState<"history" | "assignment">("history");
+  const [workTab, setWorkTab] = useState<"history" | "assignment">("assignment");
   const [historyOwnerFilter, setHistoryOwnerFilter] = useState<"全部" | "王芳" | "赵晨" | "李明">("全部");
   const [versionTraceExpanded, setVersionTraceExpanded] = useState(false);
   const [inputModalOpen, setInputModalOpen] = useState(false);
@@ -353,7 +389,14 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
               <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>实时更新的建议动作</div>
               {orderedSuggestedActions.map((item, index) => {
                 const checked = completedSuggestedActions.includes(item);
-                return <Row key={item} last={index === orderedSuggestedActions.length - 1} style={{ alignItems: "flex-start", padding: "8px 0" }}><label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer", width: "100%" }}><input type="checkbox" checked={checked} onChange={(e) => setCompletedSuggestedActions((prev) => e.target.checked ? [...prev, item] : prev.filter((entry) => entry !== item))} style={{ marginTop: 2, accentColor: C.green, width: 16, height: 16, cursor: "pointer", flexShrink: 0 }} /><span style={{ fontSize: 13, color: checked ? C.text3 : C.text0, lineHeight: 1.65, textDecoration: checked ? "line-through" : "none" }}>{item}</span></label></Row>;
+                return (
+                  <TaskFeedbackRow key={item} last={index === orderedSuggestedActions.length - 1} confidence={[85, 81, 78][index % 3]} feedbackAccent={C.green}>
+                    <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer", width: "100%" }}>
+                      <input type="checkbox" checked={checked} onChange={(e) => setCompletedSuggestedActions((prev) => e.target.checked ? [...prev, item] : prev.filter((entry) => entry !== item))} style={{ marginTop: 2, accentColor: C.green, width: 16, height: 16, cursor: "pointer", flexShrink: 0 }} />
+                      <span style={{ fontSize: 13, color: checked ? C.text3 : C.text0, lineHeight: 1.65, textDecoration: checked ? "line-through" : "none" }}>{item}</span>
+                    </label>
+                  </TaskFeedbackRow>
+                );
               })}
             </div>
             <div>
@@ -361,7 +404,20 @@ export default function WorkspacePage({ roleVariant, taskPanelState, setTaskPane
                 <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>待确认问题</div>
                 {orderedQuestionsToConfirm.map((item, index) => {
                   const checked = completedQuestionsToConfirm.includes(item);
-                  return <Row key={item} last={index === orderedQuestionsToConfirm.length - 1} style={{ alignItems: "flex-start", padding: "8px 0" }}><div style={{ display: "flex", gap: 10, alignItems: "flex-start", width: "100%" }}><label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer", flex: 1, minWidth: 0 }}><input type="checkbox" checked={checked} onChange={(e) => setCompletedQuestionsToConfirm((prev) => e.target.checked ? [...prev, item] : prev.filter((entry) => entry !== item))} style={{ marginTop: 2, accentColor: C.amber, width: 16, height: 16, cursor: "pointer", flexShrink: 0 }} /><span style={{ fontSize: 13, color: checked ? C.text3 : C.text0, lineHeight: 1.65, textDecoration: checked ? "line-through" : "none" }}>{item}</span></label><SecondaryBtn style={{ padding: "5px 10px", fontSize: 12, marginLeft: "auto", flexShrink: 0 }}>备注</SecondaryBtn></div></Row>;
+                  return (
+                    <TaskFeedbackRow
+                      key={item}
+                      last={index === orderedQuestionsToConfirm.length - 1}
+                      confidence={[76, 71, 68][index % 3]}
+                      feedbackAccent={C.amber}
+                      action={<SecondaryBtn style={{ padding: "5px 10px", fontSize: 12 }}>备注</SecondaryBtn>}
+                    >
+                      <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer", flex: 1, minWidth: 0 }}>
+                        <input type="checkbox" checked={checked} onChange={(e) => setCompletedQuestionsToConfirm((prev) => e.target.checked ? [...prev, item] : prev.filter((entry) => entry !== item))} style={{ marginTop: 2, accentColor: C.amber, width: 16, height: 16, cursor: "pointer", flexShrink: 0 }} />
+                        <span style={{ fontSize: 13, color: checked ? C.text3 : C.text0, lineHeight: 1.65, textDecoration: checked ? "line-through" : "none" }}>{item}</span>
+                      </label>
+                    </TaskFeedbackRow>
+                  );
                 })}
               </div>
             </div>
