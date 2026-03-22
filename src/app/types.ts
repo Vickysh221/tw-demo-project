@@ -5,7 +5,6 @@ export type WorkspaceRoleVariant = "sales" | "cs";
 export type PillVariant = "green" | "blue" | "amber" | "red" | "neutral";
 export type TagVariant = PillVariant | "purple";
 export type TaskPanelState = "待执行" | "执行中" | "整理中" | "确认本轮结果" | "无任务";
-export type ActionCardStatus = "none" | "executed" | "confirmed" | "communicated" | "synced";
 
 export type StatusPillProps = {
   label: string;
@@ -53,77 +52,16 @@ export type ButtonProps = {
 
 export type DecisionTensionData = {
   title: string;
-  tensionTitle?: string;
   leftLabel: string;
-  leftForceLabel?: string;
   leftSummary: string;
   leftForces: readonly string[];
   rightLabel: string;
-  rightForceLabel?: string;
   rightSummary: string;
   rightForces: readonly string[];
   currentBalance: string;
   balanceDirection: "left" | "right" | "center";
-  signalCount?: string;
-  currentBiasLabel?: string;
   whyItMatters: string;
   actionHint: string;
   evidenceEntryLabel: string;
   evidence: readonly string[];
-  evidenceEntries?: readonly string[];
-  reviewActions?: {
-    toggleEvidence?: string;
-    collapseEvidence?: string;
-    markChanged?: string;
-    markIncorrect?: string;
-  };
 };
-
-export interface ActionDecisionOption {
-  id: string;
-  label: string;
-  isPrimary?: boolean;
-}
-
-export interface ActionExecutionResult {
-  status: ActionCardStatus;
-  statusLabel: string;
-  meta?: string;
-  bullets: string[];
-  stateTransition?: string;
-}
-
-export interface ActionRecommendationItem {
-  id: string;
-  roleVariant: WorkspaceRoleVariant;
-  title: string;
-  shortHint?: string;
-  confidence: number;
-  badgeLabel?: string;
-  panelTitle: string;
-  description: string;
-  basedOn: string[];
-  impact: string[];
-  risk: string[];
-  decisionQuestion: string;
-  decisionOptions: ActionDecisionOption[];
-  executionResult: ActionExecutionResult;
-  feedback?: {
-    liked?: boolean | null;
-  };
-}
-
-export interface ActionCardEvidenceRef {
-  type: "call" | "chat" | "crm" | "event";
-  title: string;
-  timestamp?: string;
-}
-
-export interface ActionCard {
-  id: string;
-  priority: "P1" | "P2" | "P3";
-  title: string;
-  confidence: number;
-  explanation_summary?: string[];
-  evidence_refs?: ActionCardEvidenceRef[];
-}
