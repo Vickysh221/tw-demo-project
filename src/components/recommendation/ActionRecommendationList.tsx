@@ -37,6 +37,36 @@ function FeedbackControls({
   );
 }
 
+function getConfirmationState({
+  selectedDecision,
+  selectedPrediction,
+  submittedActualResult,
+}: {
+  selectedDecision?: string;
+  selectedPrediction?: string;
+  submittedActualResult?: string;
+}) {
+  if ((selectedPrediction && selectedPrediction !== "__other__") || (selectedPrediction === "__other__" && submittedActualResult)) {
+    return {
+      label: "已确认",
+      result: selectedPrediction === "__other__" ? submittedActualResult ?? "" : selectedPrediction ?? "",
+      tone: { color: C.green, bg: C.greenLight, border: C.greenBorder },
+    };
+  }
+  if (selectedDecision || selectedPrediction === "__other__") {
+    return {
+      label: "部分确认",
+      result: "",
+      tone: { color: C.amber, bg: C.amberLight, border: C.amberBorder },
+    };
+  }
+  return {
+    label: "未确认",
+    result: "",
+    tone: { color: C.text2, bg: C.surfaceAlt, border: C.border },
+  };
+}
+
 export default function ActionRecommendationList({
   items,
   onDecisionSelect,
@@ -63,6 +93,11 @@ export default function ActionRecommendationList({
       <div style={{ fontSize: 10.5, fontWeight: 600, color: C.text2, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>实时更新的建议动作</div>
       {items.map((item, index) => {
         const expanded = expandedId === item.id;
+        const confirmationState = getConfirmationState({
+          selectedDecision: selectedDecisions[item.id],
+          selectedPrediction: selectedPredictionOptions[item.id],
+          submittedActualResult: submittedActualResults[item.id],
+        });
         return (
           <div key={item.id}>
             <Row last={index === items.length - 1 && !expanded} style={{ alignItems: "flex-start", padding: "8px 0" }}>
@@ -192,8 +227,12 @@ export default function ActionRecommendationList({
                 </div>
                 <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "12px 14px" }}>
                   <div style={{ fontSize: 11, color: C.text2, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>执行结果</div>
+                  <div style={{ background: confirmationState.tone.bg, border: `1px solid ${confirmationState.tone.border}`, borderRadius: 10, padding: "10px 12px", marginBottom: 10, display: "grid", gap: 4 }}>
+                    <div style={{ fontSize: 12.5, color: confirmationState.tone.color, fontWeight: 700 }}>状态：{confirmationState.label}</div>
+                    {confirmationState.result && <div style={{ fontSize: 12.5, color: C.text0, fontWeight: 600 }}>判断结果：{confirmationState.result}</div>}
+                  </div>
                   {item.executionResult.meta && <div style={{ fontSize: 12, color: C.text2, marginBottom: 8 }}>{item.executionResult.meta}</div>}
-                  <div style={{ fontSize: 12, color: C.text2, marginBottom: 8, fontWeight: 600 }}>系统推测</div>
+                  <div style={{ fontSize: 12, color: C.text2, marginBottom: 8, fontWeight: 600 }}>候选判断（待确认）</div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     {item.executionResult.bullets.map((entry) => (
                       <button
@@ -213,9 +252,29 @@ export default function ActionRecommendationList({
                           cursor: "pointer",
                         }}
                       >
+                        {selectedPredictionOptions[item.id] === entry ? "✔ " : "  "}
                         {entry}
                       </button>
                     ))}
+                    <button
+                      onClick={() => {
+                        setSelectedPredictionOptions((prev) => ({ ...prev, [item.id]: "仍不明确" }));
+                        setPredictionOtherOpen((prev) => ({ ...prev, [item.id]: false }));
+                      }}
+                      style={{
+                        padding: "7px 12px",
+                        borderRadius: 999,
+                        border: `1px solid ${selectedPredictionOptions[item.id] === "仍不明确" ? C.greenBorder : C.border}`,
+                        background: selectedPredictionOptions[item.id] === "仍不明确" ? C.greenLight : C.surface,
+                        color: selectedPredictionOptions[item.id] === "仍不明确" ? C.green : C.text1,
+                        fontSize: 12.5,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {selectedPredictionOptions[item.id] === "仍不明确" ? "✔ " : "  "}
+                      仍不明确
+                    </button>
                     <button
                       onClick={() => {
                         setPredictionOtherOpen((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
@@ -232,6 +291,7 @@ export default function ActionRecommendationList({
                         cursor: "pointer",
                       }}
                     >
+                      {selectedPredictionOptions[item.id] === "__other__" ? "✔ " : "  "}
                       其他
                     </button>
                   </div>
