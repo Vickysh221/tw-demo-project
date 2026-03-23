@@ -168,10 +168,18 @@ function RuleControlPanel({
         const hasPendingProposal = !!proposal && proposalStatus === "pending";
         const isCloseProposal = hasPendingProposal && proposal.type === "close";
         const isWeightChange = hasPendingProposal && proposal.type === "weight_change";
+        const suggestedW = proposal?.type === "weight_change" ? proposal.suggestedWeight : undefined;
+        const displayWeight = isWeightChange && suggestedW !== undefined ? suggestedW : weight;
+        const isIncrease = suggestedW !== undefined && suggestedW > rule.weight;
+        const minusPurple = isWeightChange && !isIncrease;
+        const plusPurple = isWeightChange && isIncrease;
         const wColor = isWeightChange ? PURPLE.color : C.text0;
-        const wBtnBg = isWeightChange ? PURPLE.bg : C.surfaceAlt;
-        const wBtnBorder = isWeightChange ? PURPLE.border : C.border;
-        const wBtnColor = isWeightChange ? PURPLE.color : C.text1;
+        const wMinusBg = minusPurple ? PURPLE.bg : C.surfaceAlt;
+        const wMinusBorder = minusPurple ? PURPLE.border : C.border;
+        const wMinusColor = minusPurple ? PURPLE.color : C.text1;
+        const wPlusBg = plusPurple ? PURPLE.bg : C.surfaceAlt;
+        const wPlusBorder = plusPurple ? PURPLE.border : C.border;
+        const wPlusColor = plusPurple ? PURPLE.color : C.text1;
 
         return (
           <div
@@ -196,9 +204,9 @@ function RuleControlPanel({
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ fontSize: 12.5, color: C.text2, flex: 1 }}>Weight</div>
-              <button onClick={() => onWeightChange(rule.id, -0.05)} disabled={weight <= 0} style={{ border: `1px solid ${wBtnBorder}`, background: wBtnBg, borderRadius: 6, width: 28, height: 28, fontSize: 16, cursor: weight <= 0 ? "default" : "pointer", color: wBtnColor, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
-              <div style={{ fontSize: 14, fontWeight: 700, color: wColor, minWidth: 38, textAlign: "center" }}>{weight.toFixed(2)}</div>
-              <button onClick={() => onWeightChange(rule.id, +0.05)} disabled={weight >= 1} style={{ border: `1px solid ${wBtnBorder}`, background: wBtnBg, borderRadius: 6, width: 28, height: 28, fontSize: 16, cursor: weight >= 1 ? "default" : "pointer", color: wBtnColor, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+              <button onClick={() => onWeightChange(rule.id, -0.05)} disabled={displayWeight <= 0} style={{ border: `1px solid ${wMinusBorder}`, background: wMinusBg, borderRadius: 6, width: 28, height: 28, fontSize: 16, cursor: displayWeight <= 0 ? "default" : "pointer", color: wMinusColor, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+              <div style={{ fontSize: 14, fontWeight: 700, color: wColor, minWidth: 38, textAlign: "center" }}>{displayWeight.toFixed(2)}</div>
+              <button onClick={() => onWeightChange(rule.id, +0.05)} disabled={displayWeight >= 1} style={{ border: `1px solid ${wPlusBorder}`, background: wPlusBg, borderRadius: 6, width: 28, height: 28, fontSize: 16, cursor: displayWeight >= 1 ? "default" : "pointer", color: wPlusColor, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
             </div>
             {hasPendingProposal && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${isCloseProposal ? PURPLE.border : C.border}`, flexWrap: "wrap" }}>
@@ -337,22 +345,28 @@ function JudgmentNodeDetail({
 
   return (
     <div style={{ padding: "0 16px 16px" }}>
-      {/* 触发条件 */}
+      {/* 被修正情况 — first */}
       <div style={{ paddingTop: 12 }}>
-        <SectionTitle style={{ marginBottom: 8 }}>触发条件 (Trigger Conditions)</SectionTitle>
-        <div style={{ display: "grid", gap: 6 }}>
-          {node.triggerConditions.map((tc, i) => (
-            <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", padding: "7px 10px", background: C.surfaceAlt, borderRadius: 8, border: `1px solid ${C.border}` }}>
-              <div style={{ fontSize: 13, color: C.text1, flex: 1, lineHeight: 1.5 }}>{tc.evidenceLabel}</div>
-              <Tag label={`覆盖率 ${tc.coverage}%`} variant="blue" small />
+        <SectionTitle style={{ marginBottom: 8 }}>被修正情况 (Override Analysis)</SectionTitle>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 10px", background: C.redLight, border: `1px solid ${C.redBorder}`, borderRadius: 8, marginBottom: 8 }}>
+          <div style={{ fontSize: 13, color: C.text1 }}>改写率</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: C.red }}>{node.overrideRate}%</div>
+        </div>
+        <div style={{ fontSize: 12, color: C.text2, marginBottom: 6 }}>修正方向</div>
+        <div style={{ display: "grid", gap: 5 }}>
+          {node.overrideDirections.map((d, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ color: C.text2, fontSize: 12 }}>→</span>
+              <div style={{ fontSize: 13, color: C.text1, flex: 1 }}>{d.nodeLabel}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.amber }}>{d.rate}%</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* 被修正情况 */}
-      <Divider title="被修正情况 (Override Analysis)" />
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 10px", background: C.redLight, border: `1px solid ${C.redBorder}`, borderRadius: 8, marginBottom: 10 }}>
+      {/* 触发条件 — shows override data (content replaced) */}
+      <Divider title="触发条件 (Trigger Conditions)" />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 10px", background: C.redLight, border: `1px solid ${C.redBorder}`, borderRadius: 8, marginBottom: 8 }}>
         <div style={{ fontSize: 13, color: C.text1 }}>改写率</div>
         <div style={{ fontSize: 17, fontWeight: 700, color: C.red }}>{node.overrideRate}%</div>
       </div>
