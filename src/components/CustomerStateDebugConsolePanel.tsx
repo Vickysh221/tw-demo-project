@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { C } from "../app/theme";
-import { Card, CardPad, GovernanceToggle, SectionTitle, Tag } from "../app/ui";
+import { Card, CardPad, GovernanceToggle, SecondaryBtn, SectionTitle, Tag } from "../app/ui";
 import { customerStateDebugMock } from "../data/customerStateDebugMock";
 import type { AgentPerformanceItem, DriftItem, EvidenceItem, HealthItem, JudgmentItem, Rule } from "../data/customerStateDebugMock";
 
@@ -76,6 +76,37 @@ function computeSuggestedAdjustments(
     });
 }
 
+// ── AI proposals (static) ─────────────────────────────────────────────────────
+
+const RULE_AI_PROPOSALS: Record<string, { type: "close" | "weight_change"; reason: string; suggestedWeight?: number }> = {
+  "rule-policy-risk": {
+    type: "close",
+    reason: "Agent 判断因冲突率、修正率过高，关闭该规则",
+  },
+  "rule-role-agent": {
+    type: "weight_change",
+    reason: "覆盖率较高，Agent 建议提升权重至 0.90 以增强初始判断可靠性",
+    suggestedWeight: 0.90,
+  },
+  "rule-sales-input": {
+    type: "weight_change",
+    reason: "修正率偏高，Agent 建议降低权重至 0.65 以减少对销售输入的过度依赖",
+    suggestedWeight: 0.65,
+  },
+  "rule-policy-close": {
+    type: "weight_change",
+    reason: "修正率超过阈值，Agent 建议降低权重至 0.55 以减少成交误判",
+    suggestedWeight: 0.55,
+  },
+  "rule-policy-weight": {
+    type: "weight_change",
+    reason: "冲突率低且覆盖稳定，Agent 建议提升权重至 0.95 增强校正效果",
+    suggestedWeight: 0.95,
+  },
+};
+
+const PURPLE = { color: "#6D5BD0", bg: "#F3F0FF", border: "#DDD6FE" } as const;
+
 // ── Shared components ─────────────────────────────────────────────────────────
 
 function PanelCard({ children, style }: { children: ReactNode; style?: CSSProperties }) {
@@ -109,11 +140,17 @@ function RuleControlPanel({
   ruleOverrides,
   onWeightChange,
   onToggleEnabled,
+  proposalStates,
+  onApproveProposal,
+  onRejectProposal,
 }: {
   rules: Rule[];
   ruleOverrides: Record<string, { weight: number; enabled: boolean }>;
   onWeightChange: (ruleId: string, delta: number) => void;
   onToggleEnabled: (ruleId: string) => void;
+  proposalStates: Record<string, "pending" | "approved" | "rejected">;
+  onApproveProposal: (ruleId: string) => void;
+  onRejectProposal: (ruleId: string) => void;
 }) {
   return (
     <div style={{ display: "grid", gap: 12 }}>
@@ -126,16 +163,31 @@ function RuleControlPanel({
         const override = ruleOverrides[rule.id];
         const weight = override?.weight ?? rule.weight;
         const enabled = override?.enabled ?? rule.enabled;
+        const proposal = RULE_AI_PROPOSALS[rule.id];
+        const proposalStatus = proposalStates[rule.id] ?? "pending";
+        const hasPendingProposal = !!proposal && proposalStatus === "pending";
+        const isCloseProposal = hasPendingProposal && proposal.type === "close";
+        const isWeightChange = hasPendingProposal && proposal.type === "weight_change";
+        const wColor = isWeightChange ? PURPLE.color : C.text0;
+        const wBtnBg = isWeightChange ? PURPLE.bg : C.surfaceAlt;
+        const wBtnBorder = isWeightChange ? PURPLE.border : C.border;
+        const wBtnColor = isWeightChange ? PURPLE.color : C.text1;
+
         return (
           <div
             key={rule.id}
-            style={{ border: `1px solid ${enabled ? C.border : C.borderMd}`, borderRadius: 12, padding: "14px 16px", background: enabled ? C.surface : C.surfaceAlt, opacity: enabled ? 1 : 0.65, boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}
+            style={{ border: `1px solid ${isCloseProposal ? PURPLE.border : enabled ? C.border : C.borderMd}`, borderRadius: 12, padding: "14px 16px", background: isCloseProposal ? PURPLE.bg : enabled ? C.surface : C.surfaceAlt, boxShadow: "0 1px 2px rgba(16,24,40,0.04)" }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: C.text0, lineHeight: 1.5, flex: 1 }}>{rule.label}</div>
-              <button onClick={() => onToggleEnabled(rule.id)} style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0 }}>
-                <GovernanceToggle enabled={enabled} />
-              </button>
+              <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+                <button onClick={() => onToggleEnabled(rule.id)} style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0 }}>
+                  <GovernanceToggle enabled={enabled} />
+                </button>
+                {isCloseProposal && (
+                  <div style={{ position: "absolute", inset: -4, borderRadius: 999, background: "rgba(227, 213, 255, 0.48)", border: "1px solid #BC9BFF", opacity: 0.4, pointerEvents: "none" }} />
+                )}
+              </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
               <MetricBadge label="覆盖率" value={`${rule.coverage}%`} tone="blue" />
@@ -144,10 +196,23 @@ function RuleControlPanel({
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ fontSize: 12.5, color: C.text2, flex: 1 }}>Weight</div>
-              <button onClick={() => onWeightChange(rule.id, -0.05)} disabled={weight <= 0} style={{ border: `1px solid ${C.border}`, background: C.surfaceAlt, borderRadius: 6, width: 28, height: 28, fontSize: 16, cursor: weight <= 0 ? "default" : "pointer", color: C.text1, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
-              <div style={{ fontSize: 14, fontWeight: 700, color: C.text0, minWidth: 38, textAlign: "center" }}>{weight.toFixed(2)}</div>
-              <button onClick={() => onWeightChange(rule.id, +0.05)} disabled={weight >= 1} style={{ border: `1px solid ${C.border}`, background: C.surfaceAlt, borderRadius: 6, width: 28, height: 28, fontSize: 16, cursor: weight >= 1 ? "default" : "pointer", color: C.text1, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+              <button onClick={() => onWeightChange(rule.id, -0.05)} disabled={weight <= 0} style={{ border: `1px solid ${wBtnBorder}`, background: wBtnBg, borderRadius: 6, width: 28, height: 28, fontSize: 16, cursor: weight <= 0 ? "default" : "pointer", color: wBtnColor, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+              <div style={{ fontSize: 14, fontWeight: 700, color: wColor, minWidth: 38, textAlign: "center" }}>{weight.toFixed(2)}</div>
+              <button onClick={() => onWeightChange(rule.id, +0.05)} disabled={weight >= 1} style={{ border: `1px solid ${wBtnBorder}`, background: wBtnBg, borderRadius: 6, width: 28, height: 28, fontSize: 16, cursor: weight >= 1 ? "default" : "pointer", color: wBtnColor, display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
             </div>
+            {hasPendingProposal && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${isCloseProposal ? PURPLE.border : C.border}`, flexWrap: "wrap" }}>
+                <div style={{ fontSize: 12.5, color: C.text1, flex: 1, lineHeight: 1.55, minWidth: 160 }}>{proposal.reason}</div>
+                <SecondaryBtn onClick={() => onApproveProposal(rule.id)} style={{ padding: "5px 14px", fontSize: 12.5 }}>批准</SecondaryBtn>
+                <SecondaryBtn onClick={() => onRejectProposal(rule.id)} style={{ padding: "5px 14px", fontSize: 12.5 }}>驳回</SecondaryBtn>
+              </div>
+            )}
+            {proposalStatus === "approved" && (
+              <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.border}`, fontSize: 12, color: C.green, fontWeight: 600 }}>✓ 已批准</div>
+            )}
+            {proposalStatus === "rejected" && (
+              <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.border}`, fontSize: 12, color: C.text2, fontWeight: 600 }}>已驳回</div>
+            )}
           </div>
         );
       })}
@@ -606,6 +671,7 @@ export function CustomerStateDebugConsolePanel() {
   const [ruleOverrides, setRuleOverrides] = useState<Record<string, { weight: number; enabled: boolean }>>({});
   const [evidenceOverrides, setEvidenceOverrides] = useState<Record<string, EvidenceOverride>>({});
   const [feedbackLog, setFeedbackLog] = useState<FeedbackEntry[]>([]);
+  const [proposalStates, setProposalStates] = useState<Record<string, "pending" | "approved" | "rejected">>({});
 
   const handleRuleWeightChange = (ruleId: string, delta: number) => {
     setRuleOverrides((prev) => {
@@ -638,6 +704,27 @@ export function CustomerStateDebugConsolePanel() {
 
   const handleFeedback = (entry: FeedbackEntry) => setFeedbackLog((prev) => [...prev, entry]);
 
+  const handleApproveProposal = (ruleId: string) => {
+    setProposalStates((prev) => ({ ...prev, [ruleId]: "approved" }));
+    const proposal = RULE_AI_PROPOSALS[ruleId];
+    if (proposal?.type === "close") {
+      setRuleOverrides((prev) => {
+        const rule = rules.find((r) => r.id === ruleId)!;
+        return { ...prev, [ruleId]: { weight: prev[ruleId]?.weight ?? rule.weight, enabled: false } };
+      });
+    } else if (proposal?.type === "weight_change" && proposal.suggestedWeight !== undefined) {
+      const sw = proposal.suggestedWeight;
+      setRuleOverrides((prev) => {
+        const rule = rules.find((r) => r.id === ruleId)!;
+        return { ...prev, [ruleId]: { weight: sw, enabled: prev[ruleId]?.enabled ?? rule.enabled } };
+      });
+    }
+  };
+
+  const handleRejectProposal = (ruleId: string) => {
+    setProposalStates((prev) => ({ ...prev, [ruleId]: "rejected" }));
+  };
+
   const suggestedAdjustments = useMemo(
     () => computeSuggestedAdjustments(feedbackLog, evidenceOverrides, judgments, rules),
     [feedbackLog, evidenceOverrides, judgments, rules]
@@ -664,7 +751,7 @@ export function CustomerStateDebugConsolePanel() {
         <div className="customer-state-debug-grid" style={{ display: "grid", gap: 14 }}>
           {/* Top row */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1.45fr", gap: 14, alignItems: "start" }}>
-            <RuleControlPanel rules={rules} ruleOverrides={ruleOverrides} onWeightChange={handleRuleWeightChange} onToggleEnabled={handleRuleToggle} />
+            <RuleControlPanel rules={rules} ruleOverrides={ruleOverrides} onWeightChange={handleRuleWeightChange} onToggleEnabled={handleRuleToggle} proposalStates={proposalStates} onApproveProposal={handleApproveProposal} onRejectProposal={handleRejectProposal} />
             <PendingJudgmentPanel
               judgments={judgments}
               rules={rules}

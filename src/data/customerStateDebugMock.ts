@@ -114,11 +114,11 @@ export const customerStateDebugMock: CustomerStateDebugMock = {
     },
   ],
   rules: [
+    { id: "rule-policy-risk", label: "风险评估上浮规则", coverage: 48, conflictRate: 60, correctionRate: 77, weight: 0.60, enabled: false },
     { id: "rule-role-agent", label: "Role Agent 初始判断", coverage: 82, conflictRate: 15, correctionRate: 12, weight: 0.85, enabled: true },
     { id: "rule-sales-input", label: "销售补充修正规则", coverage: 67, conflictRate: 9, correctionRate: 18, weight: 0.75, enabled: true },
     { id: "rule-policy-close", label: "成交条件排除规则", coverage: 55, conflictRate: 22, correctionRate: 31, weight: 0.65, enabled: true },
     { id: "rule-policy-weight", label: "权重修正规则", coverage: 74, conflictRate: 8, correctionRate: 10, weight: 0.90, enabled: true },
-    { id: "rule-policy-risk", label: "风险评估上浮规则", coverage: 48, conflictRate: 28, correctionRate: 35, weight: 0.60, enabled: false },
   ],
   judgments: [
     {
